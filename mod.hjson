@@ -1,0 +1,9 @@
+name: "replay-system"
+displayName: "Replay System"
+author: "Ekrulan"
+description: "Mod for creating and viewing replays"
+version: "1.0"
+main: "replaysystem.Main"
+minGameVersion: "136"
+java: true
+hidden: true
