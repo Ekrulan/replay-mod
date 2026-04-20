@@ -14,8 +14,8 @@ public class ReplayManager {
     }
 
     public Seq<Replay> getAllReplays() {
-        Seq<Replay> list = new Seq<>();
-        for (Fi dir : replayDir.list()) {
+        var list = new Seq<Replay>();
+        for (var dir : replayDir.list()) {
             if (dir.isDirectory() && dir.child("initial.msav").exists()) {
                 list.add(new Replay(dir));
             }

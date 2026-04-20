@@ -1,10 +1,7 @@
 package replaysystem;
 
-import arc.Core;
 import arc.scene.ui.layout.Table;
-import arc.struct.Seq;
 import arc.util.Log;
-import mindustry.core.GameState;
 import mindustry.io.SaveIO;
 import mindustry.ui.dialogs.BaseDialog;
 import mindustry.Vars;
@@ -21,15 +18,15 @@ public class ReplayViewerDialog extends BaseDialog {
         cont.clear();
         cont.top().defaults().pad(8);
 
-        Seq<Replay> replays = ReplayManager.instance.getAllReplays();
+        var replays = ReplayManager.instance.getAllReplays();
 
         if (replays.isEmpty()) {
             cont.add("@replay-mod.no-replays").pad(20);
             return;
         }
 
-        for (Replay replay : replays) {
-            Table row = new Table();
+        for (var replay : replays) {
+            var row = new Table();
             row.left();
 
             row.add(replay.name).left().growX();
@@ -53,22 +50,31 @@ public class ReplayViewerDialog extends BaseDialog {
             return;
         }
 
+        Log.info("ReplayViewer: '" + replay.name + "' replay is loading");
+
         Vars.ui.paused.hide();
 
-        Core.app.post(() -> {
+        ReplayState.isLoadingReplay = true;
+        ReplayState.isReplaying = false;
+
+        arc.Core.app.post(() -> {
             try {
                 Vars.ui.loadfrag.show("@replay-mod.loading-replay");
 
                 SaveIO.load(initial);
 
-                Vars.state.set(GameState.State.playing);
+                ReplayState.isLoadingReplay = false;
+                ReplayState.isReplaying = true;
+
+                ReplayPlayer.instance.start(replay);
 
                 Vars.ui.loadfrag.hide();
-
-                Log.info("ReplayViewer: replay loaded");
+                Log.info("ReplayViewer: the replay loaded and played");
             } catch (Exception e) {
-                Log.err("ReplayViewer: error loading replay", e);
+                Log.err("ReplayViewer: error load", e);
                 Vars.ui.loadfrag.hide();
+                ReplayState.isLoadingReplay = false;
+                ReplayState.isReplaying = false;
             }
         });
     }
