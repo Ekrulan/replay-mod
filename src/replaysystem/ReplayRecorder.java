@@ -4,22 +4,21 @@ import arc.files.Fi;
 import arc.struct.Seq;
 import arc.util.Log;
 import arc.util.serialization.Jval;
+import mindustry.Vars;
 import mindustry.game.EventType.*;
 import mindustry.gen.Groups;
 import mindustry.io.SaveIO;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static replaysystem.ReplayState.SNAPSHOT_INTERVAL;
 
 public class ReplayRecorder {
     public static final ReplayRecorder instance = new ReplayRecorder();
 
     private Fi currentFolder;
     private final Seq<Jval> events = new Seq<>();
-    private final AtomicInteger tick = new AtomicInteger(0);
     private final AtomicBoolean recording = new AtomicBoolean(false);
-
-    private static final int SNAPSHOT_INTERVAL = 16;
 
 
     public void start() {
@@ -34,13 +33,12 @@ public class ReplayRecorder {
         SaveIO.save(initialSave);
 
         events.clear();
-        tick.set(0);
         recording.set(true);
         Log.info("ReplayRecorder: start");
     }
 
     public void stop() {
-        if (!recording.get()) return;
+        if (!recording.get() || events.isEmpty()) return;
         recording.set(false);
 
         var eventsFile = currentFolder.child("events.json");
@@ -56,10 +54,9 @@ public class ReplayRecorder {
 
     public void onUpdate() {
         if (!recording.get() || ReplayState.isReplaying) return;
-        var currentTick = tick.getAndIncrement();
+        var currentTick = (int)Vars.state.tick;
         if (currentTick % SNAPSHOT_INTERVAL == 0) {
             recordSnapshot(currentTick);
-            tick.set(0);
         }
     }
 

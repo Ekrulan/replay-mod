@@ -4,6 +4,6 @@ author: "Ekrulan"
 description: "Mod for creating and viewing replays"
 version: "1.0"
 main: "replaysystem.Main"
-minGameVersion: "136"
+minGameVersion: "154"
 java: true
 hidden: true
