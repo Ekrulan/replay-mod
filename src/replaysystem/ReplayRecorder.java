@@ -5,13 +5,11 @@ import arc.struct.Seq;
 import arc.util.Log;
 import arc.util.serialization.Jval;
 import mindustry.Vars;
-import mindustry.game.EventType.*;
 import mindustry.gen.Groups;
 import mindustry.io.SaveIO;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static replaysystem.ReplayState.SNAPSHOT_INTERVAL;
 
 public class ReplayRecorder {
     public static final ReplayRecorder instance = new ReplayRecorder();
@@ -22,14 +20,14 @@ public class ReplayRecorder {
 
 
     public void start() {
-        if (recording.get() || ReplayState.isReplaying) {
+        if (recording.get() || ReplayConfig.isReplaying) {
             return;
         }
 
-        currentFolder = ReplayManager.instance.replayDir.child("replay-" + System.currentTimeMillis());
+        currentFolder = ReplayFile.createWorkDir();
         currentFolder.mkdirs();
 
-        var initialSave = currentFolder.child("initial.msav");
+        var initialSave = ReplayFile.createInitial(currentFolder);
         SaveIO.save(initialSave);
 
         events.clear();
@@ -41,11 +39,11 @@ public class ReplayRecorder {
         if (!recording.get() || events.isEmpty()) return;
         recording.set(false);
 
-        var eventsFile = currentFolder.child("events.json");
+        var eventsFile = ReplayFile.createEvents(currentFolder);
         var array = Jval.newArray();
         events.each(array::add);
-//        eventsFile.writeString(array.toString(), false);
-        eventsFile.writeString(array.toString(Jval.Jformat.formatted), false);
+        eventsFile.writeString(array.toString(), false);
+//        eventsFile.writeString(array.toString(Jval.Jformat.formatted), false);
 
         Log.info("ReplayRecorder: saved (" + events.size + " events)");
         events.clear();
@@ -53,9 +51,9 @@ public class ReplayRecorder {
     }
 
     public void onUpdate() {
-        if (!recording.get() || ReplayState.isReplaying) return;
-        var currentTick = (int)Vars.state.tick;
-        if (currentTick % SNAPSHOT_INTERVAL == 0) {
+        if (!recording.get() || ReplayConfig.isReplaying) return;
+        var currentTick = (int) Vars.state.tick;
+        if (currentTick % ReplayConfig.SNAPSHOT_INTERVAL == 0) {
             recordSnapshot(currentTick);
         }
     }

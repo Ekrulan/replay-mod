@@ -28,7 +28,7 @@ public class ReplayPlayer {
         if (playing) stop();
 
         this.currentReplay = replay;
-        ReplayState.isReplaying = true;
+        ReplayConfig.isReplaying = true;
 
         if (Vars.player.unit() != null) {
             Vars.player.unit().kill();
@@ -46,7 +46,7 @@ public class ReplayPlayer {
         if (!playing) return;
 
         playing = false;
-        ReplayState.isReplaying = false;
+        ReplayConfig.isReplaying = false;
         events.clear();
         previousSnapshot = null;
         currentSnapshot = null;
@@ -56,7 +56,7 @@ public class ReplayPlayer {
     }
 
     private void loadEvents() {
-        var file = currentReplay.folder.child("events.json");
+        var file = ReplayFile.createEvents(currentReplay.folder);
         if (!file.exists()) {
             Log.warn("events.json not found");
             return;
@@ -85,7 +85,7 @@ public class ReplayPlayer {
 
         var worldTick = (int)Vars.state.tick;
 
-        if (worldTick % ReplayState.SNAPSHOT_INTERVAL != 0) return;
+        if (worldTick % ReplayConfig.SNAPSHOT_INTERVAL != 0) return;
 
         var e = events.get(snapshotCursor);
         if (!"snapshot".equals(e.getString("type", ""))) {

@@ -1,6 +1,6 @@
 package replaysystem;
 
-public class ReplayState {
+public class ReplayConfig {
     public static boolean isReplaying = false;     // сейчас идёт просмотр
     public static boolean isLoadingReplay = false; // только во время SaveIO.load
 

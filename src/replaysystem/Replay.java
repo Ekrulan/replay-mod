@@ -9,7 +9,7 @@ public class Replay {
 
     public Replay(Fi folder) {
         this.folder = folder;
-        this.timestamp = Long.parseLong(folder.name().replace("replay-", ""));
+        this.timestamp = Long.parseLong(folder.name());
         this.name = "Replay " + new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(new java.util.Date(timestamp));
     }
 }

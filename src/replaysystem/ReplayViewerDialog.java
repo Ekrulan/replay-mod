@@ -43,7 +43,7 @@ public class ReplayViewerDialog extends BaseDialog {
 
     private void playReplay(Replay replay) {
         hide();
-        var initial = replay.folder.child("initial.msav");
+        var initial = ReplayFile.createInitial(replay.folder);
         if (!initial.exists()) {
             Log.err("ReplayViewer: initial.msav not found!");
             return;
@@ -52,8 +52,8 @@ public class ReplayViewerDialog extends BaseDialog {
         Log.info("ReplayViewer: load '" + replay.name + "' ...");
 
         Vars.ui.paused.hide();
-        ReplayState.isLoadingReplay = true;
-        ReplayState.isReplaying = false;
+        ReplayConfig.isLoadingReplay = true;
+        ReplayConfig.isReplaying = false;
 
         arc.Core.app.post(() -> {
             try {
@@ -70,8 +70,8 @@ public class ReplayViewerDialog extends BaseDialog {
                 Events.fire(new EventType.WorldLoadEvent());
 
 
-                ReplayState.isLoadingReplay = false;
-                ReplayState.isReplaying = true;
+                ReplayConfig.isLoadingReplay = false;
+                ReplayConfig.isReplaying = true;
                 ReplayPlayer.instance.start(replay);
 
                 Vars.ui.loadfrag.hide();
@@ -80,8 +80,8 @@ public class ReplayViewerDialog extends BaseDialog {
             } catch (Exception e) {
                 Log.err("ReplayViewer: error loading", e);
                 Vars.ui.loadfrag.hide();
-                ReplayState.isLoadingReplay = false;
-                ReplayState.isReplaying = false;
+                ReplayConfig.isLoadingReplay = false;
+                ReplayConfig.isReplaying = false;
             }
         });
     }

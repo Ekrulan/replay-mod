@@ -1,22 +1,14 @@
 package replaysystem;
 
 import arc.struct.Seq;
-import arc.files.Fi;
-import mindustry.Vars;
 
 public class ReplayManager {
     public static final ReplayManager instance = new ReplayManager();
-    final Fi replayDir;
-
-    private ReplayManager() {
-        replayDir = Vars.dataDirectory.child("replays");
-        if (!replayDir.exists()) replayDir.mkdirs();
-    }
 
     public Seq<Replay> getAllReplays() {
         var list = new Seq<Replay>();
-        for (var dir : replayDir.list()) {
-            if (dir.isDirectory() && dir.child("initial.msav").exists()) {
+        for (var dir : ReplayFile.REPLAYS_DIR.list()) {
+            if (dir.isDirectory() && dir.child(ReplayFile.INIT_MAP).exists()) {
                 list.add(new Replay(dir));
             }
         }

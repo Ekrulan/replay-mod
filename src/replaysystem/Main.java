@@ -15,26 +15,26 @@ public class Main extends Mod {
         Log.info("ReplayMod loaded");
 
         Events.on(WorldLoadEvent.class, e -> {
-            if (ReplayState.isReplaying || ReplayState.isLoadingReplay) {
+            if (ReplayConfig.isReplaying || ReplayConfig.isLoadingReplay) {
                 return;
             }
             ReplayRecorder.instance.start();
         });
 
         Events.on(ResetEvent.class, e -> {
-            if (ReplayState.isLoadingReplay) {
+            if (ReplayConfig.isLoadingReplay) {
                 return;
             }
 
             ReplayRecorder.instance.stop();
             ReplayPlayer.instance.stop();
-            ReplayState.isReplaying = false;
-            ReplayState.isLoadingReplay = false;
+            ReplayConfig.isReplaying = false;
+            ReplayConfig.isLoadingReplay = false;
         });
 
         Events.on(
                 PlayerSpawnCallPacket.class, e -> {
-            if (ReplayState.isReplaying) {
+            if (ReplayConfig.isReplaying) {
                 e.player.clearUnit();
             }
         });
