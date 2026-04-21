@@ -43,7 +43,7 @@ public class ReplayRecorder {
         var array = Jval.newArray();
         events.each(array::add);
         eventsFile.writeString(array.toString(), false);
-//        eventsFile.writeString(array.toString(Jval.Jformat.formatted), false);
+        eventsFile.writeString(array.toString(Jval.Jformat.formatted), false);
 
         Log.info("ReplayRecorder: saved (" + events.size + " events)");
         events.clear();
@@ -66,14 +66,7 @@ public class ReplayRecorder {
         var unitsArray = Jval.newArray();
         Groups.unit.each(unit -> {
             if (unit == null || !unit.isAdded()) return;
-            var u = Jval.newObject();
-            u.put("id", unit.id);
-            u.put("type", unit.type.name);
-            u.put("x", unit.x);
-            u.put("y", unit.y);
-            u.put("rot", unit.rotation);
-            u.put("health", unit.health);
-            u.put("team", unit.team.id);
+            var u = ReplayJsonData.UnitSnapshot.fromUnit(unit).toJson();
             unitsArray.add(u);
         });
 

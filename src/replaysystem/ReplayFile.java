@@ -30,4 +30,13 @@ public class ReplayFile {
     public static Fi createEvents(Fi dir) {
         return dir.child(EVENTS);
     }
+
+    public static void zip(Fi dir) {
+    }
+
+    public static Fi unzip(Fi dir) {
+        return null;
+    }
+
+
 }

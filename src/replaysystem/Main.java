@@ -9,6 +9,9 @@ import mindustry.gen.PlayerSpawnCallPacket;
 import mindustry.mod.Mod;
 import mindustry.Vars;
 
+// TODO оптимизировать хранение событий и их воспроизведение.
+
+
 public class Main extends Mod {
 
     public Main() {

@@ -1,6 +1,7 @@
 package replaysystem;
 
 import arc.math.Mathf;
+import arc.struct.IntSet;
 import arc.struct.Seq;
 import arc.util.Log;
 import arc.util.Nullable;
@@ -8,7 +9,8 @@ import arc.util.serialization.Jval;
 import mindustry.Vars;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
-import mindustry.gen.Unit;
+
+import static replaysystem.Util.safeFloat;
 
 public class ReplayPlayer {
 
@@ -83,8 +85,8 @@ public class ReplayPlayer {
             return;
         }
 
-        var worldTick = (int)Vars.state.tick;
-
+        var worldTick = (int) Vars.state.tick;
+//
         if (worldTick % ReplayConfig.SNAPSHOT_INTERVAL != 0) return;
 
         var e = events.get(snapshotCursor);
@@ -111,36 +113,33 @@ public class ReplayPlayer {
         var unitsArray = snapshot.get("units");
         if (unitsArray == null || !unitsArray.isArray()) return;
 
-        Log.info("g unit: " + Groups.unit.size() + " a unit: " + unitsArray.asArray().size);
 
         for (var u : unitsArray.asArray()) {
-            var id = u.getInt("id", -1);
-            if (id == -1) continue;
 
-            var typeName = u.getString("type");
-            var x = safeFloat(u, "x", -1f);
-            var y = safeFloat(u, "y", -1f);
-            var rot = safeFloat(u, "rot", -1f);
-            var health = safeFloat(u, "health", -1f);
-            var teamId = u.getInt("team", -1);
+            var unitDt = ReplayJsonData.UnitSnapshot.fromJson(u);
 
-            var unit = Groups.unit.find(unit2 -> unit2.id == id);
+            if (unitDt == null) {
+                Log.warn("ReplayPlayer: invalid unit part: " + u);
+                continue;
+            }
+
+            var unit = Groups.unit.find(unit2 -> unit2.id == unitDt.id);
 
             if (unit == null) {
-                var unitType = Vars.content.units().find(ut -> ut.name.equals(typeName));
+                var unitType = Vars.content.units().find(ut -> ut.name.equals(unitDt.type));
                 if (unitType == null) {
                     continue;
                 }
 
-                unit = unitType.create(Team.get(teamId));
-                unit.id = id;
+                unit = unitType.create(Team.get(unitDt.team));
+                unit.id = unitDt.id;
                 unit.add();
             }
 
 
-            unit.move(x, y);
-            unit.rotation = rot;
-            unit.health = health;
+            unit.move(unitDt.x, unitDt.y);
+            unit.rotation = unitDt.rot;
+            unit.health = unitDt.health;
         }
     }
 
@@ -155,47 +154,42 @@ public class ReplayPlayer {
         var currUnits = currentSnapshot.get("units");
         if (prevUnits == null || currUnits == null) return;
 
+        var prevIds = new IntSet();
+        for (var pu : prevUnits.asArray()) {
+            int id = pu.getInt(ReplayJsonData.UnitSnapshot.ID, -1);
+            if (id != -1) prevIds.add(id);
+        }
+
         for (var cu : currUnits.asArray()) {
-            var id = cu.getInt("id", -1);
+            var id = cu.getInt(ReplayJsonData.UnitSnapshot.ID, -1);
             if (id == -1) continue;
 
-            Unit unit = Groups.unit.find(u -> u.id == id);
+            prevIds.remove(id);
+            var unit = Groups.unit.find(u -> u.id == id);
             if (unit == null || unit.dead()) continue;
 
-            Jval pu = findUnitById(prevUnits, id);
+            var pu = findUnitById(prevUnits, id);
             if (pu == null) continue;
 
-            var prevX = safeFloat(pu, "x", unit.x);
-            var prevY = safeFloat(pu, "y", unit.y);
-            var prevRot = safeFloat(pu, "rot", unit.rotation);
+            var prevX = safeFloat(pu, ReplayJsonData.UnitSnapshot.X, unit.x);
+            var prevY = safeFloat(pu, ReplayJsonData.UnitSnapshot.Y, unit.y);
+            var prevRot = safeFloat(pu, ReplayJsonData.UnitSnapshot.ROT, unit.rotation);
 
-            var targetX = safeFloat(cu, "x", unit.x);
-            var targetY = safeFloat(cu, "y", unit.y);
-            var targetRot = safeFloat(cu, "rot", unit.rotation);
+            var targetX = safeFloat(cu, ReplayJsonData.UnitSnapshot.X, unit.x);
+            var targetY = safeFloat(cu, ReplayJsonData.UnitSnapshot.Y, unit.y);
+            var targetRot = safeFloat(cu, ReplayJsonData.UnitSnapshot.ROT, unit.rotation);
 
-            unit.set(
-                    Mathf.lerp(prevX, targetX, t),
-                    Mathf.lerp(prevY, targetY, t)
-            );
-
+            unit.set(Mathf.lerp(prevX, targetX, t), Mathf.lerp(prevY, targetY, t));
             unit.rotation = lerpAngle(prevRot, targetRot, t);
         }
-    }
 
-    private static float safeFloat(Jval obj, String key, float defaultValue) {
-        var v = obj.get(key);
-        if (v == null) return defaultValue;
-
-        try {
-            return v.asFloat();
-        } catch (Exception ignored) {
-            try {
-                return Float.parseFloat(v.asString());
-            } catch (Exception e) {
-                return defaultValue;
-            }
+        for (var it = prevIds.iterator(); it.hasNext; ) {
+            var missingId = it.next();
+            var unit = Groups.unit.find(u -> u.id == missingId);
+            if (unit != null && !unit.dead()) unit.kill();
         }
     }
+
 
     private static float lerpAngle(float from, float to, float t) {
         var delta = ((to - from + 180f) % 360f) - 180f;
@@ -205,7 +199,7 @@ public class ReplayPlayer {
     private Jval findUnitById(Jval unitsArray, int id) {
         if (!unitsArray.isArray()) return null;
         for (var u : unitsArray.asArray()) {
-            if (u.getInt("id", -1) == id) return u;
+            if (u.getInt(ReplayJsonData.UnitSnapshot.ID, -1) == id) return u;
         }
         return null;
     }
