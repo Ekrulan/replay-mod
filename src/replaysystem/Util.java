@@ -5,12 +5,7 @@ import arc.util.serialization.Jval;
 
 public class Util {
 
-    public static @Nullable Float safeFloat(Jval obj, String key) {
-        if (obj == null) return null;
-
-        Jval v = obj.get(key);
-        if (v == null || v.isNull()) return null;
-
+    public static @Nullable Float safeFloat(Jval v) {
         try {
             String str = v.isString() ? v.asString().trim() : v.toString().trim();
             return Float.parseFloat(str);
@@ -19,8 +14,8 @@ public class Util {
         }
     }
 
-    public static Float safeFloat(Jval obj, String key, Float def) {
-        var r = safeFloat(obj, key);
+    public static Float safeFloat(Jval obj, Float def) {
+        var r = safeFloat(obj);
         return r != null ? r : def;
     }
 }

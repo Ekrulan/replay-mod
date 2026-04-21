@@ -90,12 +90,8 @@ public class ReplayPlayer {
         if (worldTick % ReplayConfig.SNAPSHOT_INTERVAL != 0) return;
 
         var e = events.get(snapshotCursor);
-        if (!"snapshot".equals(e.getString(ReplayJsonData.EVENT_TYPE, ""))) {
-            snapshotCursor++;
-            return;
-        }
 
-        var eventTick = e.getInt(ReplayJsonData.TICK, -1);
+        var eventTick = e.getInt(Snapshot.TICK, -1);
 
         applyUnitSnapshot(e);
 
@@ -110,13 +106,12 @@ public class ReplayPlayer {
     }
 
     private void applyUnitSnapshot(Jval snapshot) {
-        var unitsArray = snapshot.get(ReplayJsonData.UnitSnapshot.UNITS);
+        var unitsArray = snapshot.get(Snapshot.UNITS);
         if (unitsArray == null || !unitsArray.isArray()) return;
-
 
         for (var u : unitsArray.asArray()) {
 
-            var unitDt = ReplayJsonData.UnitSnapshot.fromJson(u);
+            var unitDt = Snapshot.Unit.fromJson(u);
 
             if (unitDt == null) {
                 Log.warn("ReplayPlayer: invalid unit part: " + u);
@@ -135,8 +130,6 @@ public class ReplayPlayer {
                 unit.id = unitDt.id;
                 unit.add();
             }
-
-
             unit.move(unitDt.x, unitDt.y);
             unit.rotation = unitDt.rot;
             unit.health = unitDt.health;
@@ -150,37 +143,39 @@ public class ReplayPlayer {
         var t = (delta == 0) ? 1f : (currentWorldTick - previousTick) / (float) delta;
         t = Mathf.clamp(t, 0f, 1f);
 
-        var prevUnits = previousSnapshot.get(ReplayJsonData.UnitSnapshot.UNITS);
-        var currUnits = currentSnapshot.get(ReplayJsonData.UnitSnapshot.UNITS);
+        var prevUnits = previousSnapshot.get(Snapshot.UNITS);
+        var currUnits = currentSnapshot.get(Snapshot.UNITS);
         if (prevUnits == null || currUnits == null) return;
 
         var prevIds = new IntSet();
         for (var pu : prevUnits.asArray()) {
-            int id = pu.getInt(ReplayJsonData.UnitSnapshot.ID, -1);
+            int id = pu.asArray().get(Snapshot.Unit.ID).asInt();
             if (id != -1) prevIds.add(id);
         }
 
         for (var cu : currUnits.asArray()) {
-            var id = cu.getInt(ReplayJsonData.UnitSnapshot.ID, -1);
-            if (id == -1) continue;
+            var ut = Snapshot.Unit.fromJson(cu);
+            assert ut != null;
+            if (ut.id == -1) continue;
 
-            prevIds.remove(id);
-            var unit = Groups.unit.find(u -> u.id == id);
+            prevIds.remove(ut.id);
+            var unit = Groups.unit.find(u -> u.id == ut.id);
             if (unit == null || unit.dead()) continue;
 
-            var pu = findUnitById(prevUnits, id);
+            var pu = findUnitById(prevUnits, ut.id);
             if (pu == null) continue;
 
-            var prevX = safeFloat(pu, ReplayJsonData.UnitSnapshot.X, unit.x);
-            var prevY = safeFloat(pu, ReplayJsonData.UnitSnapshot.Y, unit.y);
-            var prevRot = safeFloat(pu, ReplayJsonData.UnitSnapshot.ROT, unit.rotation);
+            var arr = pu.asArray();
 
-            var targetX = safeFloat(cu, ReplayJsonData.UnitSnapshot.X, unit.x);
-            var targetY = safeFloat(cu, ReplayJsonData.UnitSnapshot.Y, unit.y);
-            var targetRot = safeFloat(cu, ReplayJsonData.UnitSnapshot.ROT, unit.rotation);
+            var prevX = safeFloat(arr.get(Snapshot.Unit. X));
+            assert prevX != null;
+            var prevY = safeFloat(arr.get(Snapshot.Unit. Y));
+            assert prevY != null;
+            var prevRot = safeFloat(arr.get(Snapshot.Unit.ROT));
+            assert prevRot != null;
 
-            unit.set(Mathf.lerp(prevX, targetX, t), Mathf.lerp(prevY, targetY, t));
-            unit.rotation = lerpAngle(prevRot, targetRot, t);
+            unit.set(Mathf.lerp(prevX, ut.x, t), Mathf.lerp(prevY, ut.y, t));
+            unit.rotation = lerpAngle(prevRot, ut.rot, t);
         }
 
         for (var it = prevIds.iterator(); it.hasNext; ) {
@@ -199,7 +194,7 @@ public class ReplayPlayer {
     private Jval findUnitById(Jval unitsArray, int id) {
         if (!unitsArray.isArray()) return null;
         for (var u : unitsArray.asArray()) {
-            if (u.getInt(ReplayJsonData.UnitSnapshot.ID, -1) == id) return u;
+            if (u.asArray().get(Snapshot.Unit.ID).asInt() == id) return u;
         }
         return null;
     }

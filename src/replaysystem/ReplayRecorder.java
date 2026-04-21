@@ -54,23 +54,22 @@ public class ReplayRecorder {
         if (!recording.get() || ReplayConfig.isReplaying) return;
         var currentTick = (int) Vars.state.tick;
         if (currentTick % ReplayConfig.SNAPSHOT_INTERVAL == 0) {
-            recordSnapshot(currentTick);
+            recordUnit(currentTick);
         }
     }
 
-    private void recordSnapshot(int currentTick) {
+    private void recordUnit(int currentTick) {
         var snapshot = Jval.newObject();
-        snapshot.put(ReplayJsonData.TICK, currentTick);
-        snapshot.put(ReplayJsonData.EVENT_TYPE, "snapshot");
+        snapshot.put(Snapshot.TICK, currentTick);
 
         var unitsArray = Jval.newArray();
         Groups.unit.each(unit -> {
             if (unit == null || !unit.isAdded()) return;
-            var u = ReplayJsonData.UnitSnapshot.fromUnit(unit).toJson();
+            var u = Snapshot.Unit.fromUnit(unit).toJson();
             unitsArray.add(u);
         });
 
-        snapshot.put(ReplayJsonData.UnitSnapshot.UNITS, unitsArray);
+        snapshot.put(Snapshot.UNITS, unitsArray);
 
         events.add(snapshot);
     }

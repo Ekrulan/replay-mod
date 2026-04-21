@@ -49,8 +49,8 @@ public class Main extends Mod {
 
         Events.on(
                 BlockBuildEndEvent.class,
-                e -> Log.info("BuildEnd: team: " + e.tile.team() + "; x=" + e.tile.x + "; y=" + e.tile.y + "; build: " + (e.tile.build != null ?
-                        e.tile.build.block.id : "null"))
+                e -> Log.info("BuildEnd: team: " + e.tile.team().id + "; x=" + e.tile.x + "; y=" + e.tile.y + "; build: " + (e.tile.build != null ?
+                        e.tile.build.id : "null"))
         );
         Events.on(
                 BlockDestroyEvent.class,
