@@ -43,7 +43,7 @@ public class ReplayRecorder {
         var array = Jval.newArray();
         events.each(array::add);
         eventsFile.writeString(array.toString(), false);
-        eventsFile.writeString(array.toString(Jval.Jformat.formatted), false);
+//        eventsFile.writeString(array.toString(Jval.Jformat.formatted), false);
 
         Log.info("ReplayRecorder: saved (" + events.size + " events)");
         events.clear();
@@ -60,8 +60,8 @@ public class ReplayRecorder {
 
     private void recordSnapshot(int currentTick) {
         var snapshot = Jval.newObject();
-        snapshot.put("tick", currentTick);
-        snapshot.put("type", "snapshot");
+        snapshot.put(ReplayJsonData.TICK, currentTick);
+        snapshot.put(ReplayJsonData.EVENT_TYPE, "snapshot");
 
         var unitsArray = Jval.newArray();
         Groups.unit.each(unit -> {
@@ -70,7 +70,8 @@ public class ReplayRecorder {
             unitsArray.add(u);
         });
 
-        snapshot.put("units", unitsArray);
+        snapshot.put(ReplayJsonData.UnitSnapshot.UNITS, unitsArray);
+
         events.add(snapshot);
     }
 

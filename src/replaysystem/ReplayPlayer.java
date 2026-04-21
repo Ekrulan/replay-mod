@@ -86,16 +86,16 @@ public class ReplayPlayer {
         }
 
         var worldTick = (int) Vars.state.tick;
-//
+
         if (worldTick % ReplayConfig.SNAPSHOT_INTERVAL != 0) return;
 
         var e = events.get(snapshotCursor);
-        if (!"snapshot".equals(e.getString("type", ""))) {
+        if (!"snapshot".equals(e.getString(ReplayJsonData.EVENT_TYPE, ""))) {
             snapshotCursor++;
             return;
         }
 
-        var eventTick = e.getInt("tick", -1);
+        var eventTick = e.getInt(ReplayJsonData.TICK, -1);
 
         applyUnitSnapshot(e);
 
@@ -110,7 +110,7 @@ public class ReplayPlayer {
     }
 
     private void applyUnitSnapshot(Jval snapshot) {
-        var unitsArray = snapshot.get("units");
+        var unitsArray = snapshot.get(ReplayJsonData.UnitSnapshot.UNITS);
         if (unitsArray == null || !unitsArray.isArray()) return;
 
 
@@ -150,8 +150,8 @@ public class ReplayPlayer {
         var t = (delta == 0) ? 1f : (currentWorldTick - previousTick) / (float) delta;
         t = Mathf.clamp(t, 0f, 1f);
 
-        var prevUnits = previousSnapshot.get("units");
-        var currUnits = currentSnapshot.get("units");
+        var prevUnits = previousSnapshot.get(ReplayJsonData.UnitSnapshot.UNITS);
+        var currUnits = currentSnapshot.get(ReplayJsonData.UnitSnapshot.UNITS);
         if (prevUnits == null || currUnits == null) return;
 
         var prevIds = new IntSet();

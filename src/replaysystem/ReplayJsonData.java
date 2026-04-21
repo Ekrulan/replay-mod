@@ -8,6 +8,11 @@ import static replaysystem.Util.safeFloat;
 
 public class ReplayJsonData {
 
+    // Make sure the markings don't match.
+    public static final String TICK = "t";
+    public static final String EVENT_TYPE = "t2";
+
+
     public static class UnitSnapshot {
         public final int id;
         public final String type;
@@ -25,6 +30,8 @@ public class ReplayJsonData {
         public static final String ROT = "r";
         public static final String HEALTH = "h";
         public static final String TEAM = "t1";
+
+        public static final String UNITS = "u";
 
         public UnitSnapshot(int id, String type, float x, float y, float rot, float health, int team) {
             this.id = id;

@@ -17,38 +17,45 @@ public class Main extends Mod {
     public Main() {
         Log.info("ReplayMod loaded");
 
-        Events.on(WorldLoadEvent.class, e -> {
-            if (ReplayConfig.isReplaying || ReplayConfig.isLoadingReplay) {
-                return;
-            }
-            ReplayRecorder.instance.start();
-        });
+        Events.on(
+                WorldLoadEvent.class, e -> {
+                    if (ReplayConfig.isReplaying || ReplayConfig.isLoadingReplay) {
+                        return;
+                    }
+                    ReplayRecorder.instance.start();
+                }
+        );
 
-        Events.on(ResetEvent.class, e -> {
-            if (ReplayConfig.isLoadingReplay) {
-                return;
-            }
+        Events.on(
+                ResetEvent.class, e -> {
+                    if (ReplayConfig.isLoadingReplay) {
+                        return;
+                    }
 
-            ReplayRecorder.instance.stop();
-            ReplayPlayer.instance.stop();
-            ReplayConfig.isReplaying = false;
-            ReplayConfig.isLoadingReplay = false;
-        });
+                    ReplayRecorder.instance.stop();
+                    ReplayPlayer.instance.stop();
+                    ReplayConfig.isReplaying = false;
+                    ReplayConfig.isLoadingReplay = false;
+                }
+        );
 
         Events.on(
                 PlayerSpawnCallPacket.class, e -> {
-            if (ReplayConfig.isReplaying) {
-                e.player.clearUnit();
-            }
-        });
+                    if (ReplayConfig.isReplaying) {
+                        e.player.clearUnit();
+                    }
+                }
+        );
 
-//        Events.on(BlockBuildEndEvent.class, e -> ReplayRecorder.instance.recordEvent("buildEnd", e));
-//        Events.on(BlockDestroyEvent.class, e -> ReplayRecorder.instance.recordEvent("destroy", e));
-//        Events.on(UnitDestroyEvent.class, e -> ReplayRecorder.instance.recordEvent("unitDestroy", e));
-//        Events.on(UnitSpawnEvent.class, e -> ReplayRecorder.instance.recordEvent("unitSpawn", e));
-//        Events.on(UnitChangeEvent.class, e -> ReplayRecorder.instance.recordEvent("unitChange", e));
-//        Events.on(ConfigEvent.class, e -> ReplayRecorder.instance.recordEvent("config", e));
-//        Events.on(TapEvent.class, e -> ReplayRecorder.instance.recordEvent("tap", e));
+        Events.on(
+                BlockBuildEndEvent.class,
+                e -> Log.info("BuildEnd: team: " + e.tile.team() + "; x=" + e.tile.x + "; y=" + e.tile.y + "; build: " + (e.tile.build != null ?
+                        e.tile.build.block.id : "null"))
+        );
+        Events.on(
+                BlockDestroyEvent.class,
+                e -> Log.info("Destroy: x=" + e.tile.x + "; y=" + e.tile.y)
+        );
 
         Events.run(
                 Trigger.update, () -> {
