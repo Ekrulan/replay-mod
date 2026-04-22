@@ -5,8 +5,6 @@ import mindustry.gen.Unit;
 
 public class ReplayController implements UnitController {
 
-    public final static ReplayController instance = new ReplayController();
-
     @Override
     public void unit(Unit unit) {
     }

@@ -49,12 +49,11 @@ public class Main extends Mod {
 
         Events.on(
                 BlockBuildEndEvent.class,
-                e -> Log.info("BuildEnd: team: " + e.tile.team().id + "; x=" + e.tile.x + "; y=" + e.tile.y + "; build: " + (e.tile.build != null ?
-                        e.tile.build.id : "null"))
+                e -> ReplayRecorder.instance.recordBlock(ReplayFrame.Block.fromEvent(e))
         );
         Events.on(
                 BlockDestroyEvent.class,
-                e -> Log.info("Destroy: x=" + e.tile.x + "; y=" + e.tile.y)
+                e -> ReplayRecorder.instance.recordBlock(ReplayFrame.Block.fromDestroy(e.tile.x, e.tile.y))
         );
 
         Events.run(
@@ -63,7 +62,6 @@ public class Main extends Mod {
                     ReplayPlayer.instance.onUpdate();
                 }
         );
-
 
         // ui
         Events.on(

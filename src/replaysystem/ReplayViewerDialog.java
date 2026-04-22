@@ -64,7 +64,6 @@ public class ReplayViewerDialog extends BaseDialog {
 
                 SaveIO.load(initial);
 
-                disablePlayerControl();
 
                 Vars.state.set(GameState.State.playing);
                 Events.fire(new EventType.WorldLoadEvent());
@@ -86,12 +85,4 @@ public class ReplayViewerDialog extends BaseDialog {
         });
     }
 
-    private void disablePlayerControl() {
-        if (Vars.player.unit() != null) {
-            Vars.player.unit().kill();
-            Vars.player.unit().controller(ReplayController.instance);
-        }
-        Vars.player.clearUnit();
-
-    }
 }

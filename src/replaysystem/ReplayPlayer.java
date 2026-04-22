@@ -91,7 +91,7 @@ public class ReplayPlayer {
 
         var e = events.get(snapshotCursor);
 
-        var eventTick = e.getInt(Snapshot.TICK, -1);
+        var eventTick = e.getInt(ReplayFrame.TICK, -1);
 
         applyUnitSnapshot(e);
 
@@ -106,12 +106,12 @@ public class ReplayPlayer {
     }
 
     private void applyUnitSnapshot(Jval snapshot) {
-        var unitsArray = snapshot.get(Snapshot.UNITS);
+        var unitsArray = snapshot.get(ReplayFrame.UNITS);
         if (unitsArray == null || !unitsArray.isArray()) return;
 
         for (var u : unitsArray.asArray()) {
 
-            var unitDt = Snapshot.Unit.fromJson(u);
+            var unitDt = ReplayFrame.Unit.fromJson(u);
 
             if (unitDt == null) {
                 Log.warn("ReplayPlayer: invalid unit part: " + u);
@@ -143,18 +143,18 @@ public class ReplayPlayer {
         var t = (delta == 0) ? 1f : (currentWorldTick - previousTick) / (float) delta;
         t = Mathf.clamp(t, 0f, 1f);
 
-        var prevUnits = previousSnapshot.get(Snapshot.UNITS);
-        var currUnits = currentSnapshot.get(Snapshot.UNITS);
+        var prevUnits = previousSnapshot.get(ReplayFrame.UNITS);
+        var currUnits = currentSnapshot.get(ReplayFrame.UNITS);
         if (prevUnits == null || currUnits == null) return;
 
         var prevIds = new IntSet();
         for (var pu : prevUnits.asArray()) {
-            int id = pu.asArray().get(Snapshot.Unit.ID).asInt();
+            int id = pu.asArray().get(ReplayFrame.Unit.ID).asInt();
             if (id != -1) prevIds.add(id);
         }
 
         for (var cu : currUnits.asArray()) {
-            var ut = Snapshot.Unit.fromJson(cu);
+            var ut = ReplayFrame.Unit.fromJson(cu);
             assert ut != null;
             if (ut.id == -1) continue;
 
@@ -167,11 +167,11 @@ public class ReplayPlayer {
 
             var arr = pu.asArray();
 
-            var prevX = safeFloat(arr.get(Snapshot.Unit. X));
+            var prevX = safeFloat(arr.get(ReplayFrame.Unit. X));
             assert prevX != null;
-            var prevY = safeFloat(arr.get(Snapshot.Unit. Y));
+            var prevY = safeFloat(arr.get(ReplayFrame.Unit. Y));
             assert prevY != null;
-            var prevRot = safeFloat(arr.get(Snapshot.Unit.ROT));
+            var prevRot = safeFloat(arr.get(ReplayFrame.Unit.ROT));
             assert prevRot != null;
 
             unit.set(Mathf.lerp(prevX, ut.x, t), Mathf.lerp(prevY, ut.y, t));
@@ -194,7 +194,7 @@ public class ReplayPlayer {
     private Jval findUnitById(Jval unitsArray, int id) {
         if (!unitsArray.isArray()) return null;
         for (var u : unitsArray.asArray()) {
-            if (u.asArray().get(Snapshot.Unit.ID).asInt() == id) return u;
+            if (u.asArray().get(ReplayFrame.Unit.ID).asInt() == id) return u;
         }
         return null;
     }

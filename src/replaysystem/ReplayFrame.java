@@ -2,10 +2,11 @@ package replaysystem;
 
 import arc.util.Nullable;
 import arc.util.serialization.Jval;
+import mindustry.game.EventType;
 
 import static replaysystem.Util.safeFloat;
 
-public class Snapshot {
+public class ReplayFrame {
 
     // Make sure the markings don't match.
     public static final String TICK = "t";
@@ -44,7 +45,7 @@ public class Snapshot {
             return new Unit(unit.id, unit.type.name, unit.x, unit.y, unit.rotation, unit.health, unit.team.id);
         }
 
-        public static @Nullable Snapshot.Unit fromJson(Jval.JsonArray vl) {
+        public static @Nullable ReplayFrame.Unit fromJson(Jval.JsonArray vl) {
 
             if (vl.size != 7) {
                 return null;
@@ -71,10 +72,10 @@ public class Snapshot {
             int teamId = vl.get(TEAM).asInt();
             if (teamId == -1) return null;
 
-            return new Snapshot.Unit(id, typeName, x, y, rot, health, teamId);
+            return new ReplayFrame.Unit(id, typeName, x, y, rot, health, teamId);
         }
 
-        public static @Nullable Snapshot.Unit fromJson(Jval vl) {
+        public static @Nullable ReplayFrame.Unit fromJson(Jval vl) {
             return vl.isArray() ? fromJson(vl.asArray()) : null;
         }
 
@@ -110,19 +111,28 @@ public class Snapshot {
         public static final int TEAM = 5;
 
         public Block(int buildId, short x, short y, int rot, float health, int team) {
+            this.build_id = buildId;
             this.x = x;
             this.y = y;
-            this.build_id = buildId;
             this.rot = rot;
             this.health = health;
             this.team = team;
         }
 
-        public static Snapshot.Block destroy(short x, short y) {
-            return new Snapshot.Block(5, x, y, 0, 0, -1);
+        public static ReplayFrame.Block fromDestroy(short x, short y) {
+            return new ReplayFrame.Block(5, x, y, 0, 0, -1);
         }
 
-        public static @Nullable Snapshot.Block fromJson(Jval.JsonArray vl) {
+        public static ReplayFrame.Block fromEvent(EventType.BlockBuildEndEvent e) {
+            var build = e.tile.build;
+            if (build != null) {
+                return new ReplayFrame.Block(build.id, e.tile.x, e.tile.y, build.rotation, build.health, build.team.id);
+            } else {
+                return fromDestroy(e.tile.x, e.tile.y);
+            }
+        }
+
+        public static @Nullable ReplayFrame.Block fromJson(Jval.JsonArray vl) {
             if (vl.size != 6) {
                 return null;
             }
@@ -141,10 +151,10 @@ public class Snapshot {
             int teamId = vl.get(TEAM).asInt();
             if (teamId == -1) return null;
 
-            return new Snapshot.Block(build_id, x, y, rot, health, teamId);
+            return new ReplayFrame.Block(build_id, x, y, rot, health, teamId);
         }
 
-        public static @Nullable Snapshot.Block fromJson(Jval vl) {
+        public static @Nullable ReplayFrame.Block fromJson(Jval vl) {
             return vl.isArray() ? fromJson(vl.asArray()) : null;
         }
 

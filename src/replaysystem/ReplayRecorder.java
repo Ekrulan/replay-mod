@@ -18,6 +18,8 @@ public class ReplayRecorder {
     private final Seq<Jval> events = new Seq<>();
     private final AtomicBoolean recording = new AtomicBoolean(false);
 
+    private Jval snapshot = Jval.newObject();
+
 
     public void start() {
         if (recording.get() || ReplayConfig.isReplaying) {
@@ -53,33 +55,32 @@ public class ReplayRecorder {
     public void onUpdate() {
         if (!recording.get() || ReplayConfig.isReplaying) return;
         var currentTick = (int) Vars.state.tick;
-        if (currentTick % ReplayConfig.SNAPSHOT_INTERVAL == 0) {
-            recordUnit(currentTick);
+
+        if (currentTick % ReplayConfig.SNAPSHOT_INTERVAL != 0) {
+            return;
+        }
+        snapshot.put(ReplayFrame.TICK, currentTick);
+        recordUnit();
+        events.add(snapshot);
+        snapshot = Jval.newObject();
+    }
+
+
+    private void recordUnit() {
+        var unitsArray = Jval.newArray();
+        Groups.unit.each(unit -> {
+            // TODO optimize it
+            if (unit == null || !unit.isAdded()) return;
+            var u = ReplayFrame.Unit.fromUnit(unit).toJson();
+            unitsArray.add(u);
+        });
+        if (!unitsArray.asArray().isEmpty()) {
+            snapshot.put(ReplayFrame.UNITS, unitsArray);
         }
     }
 
-    private void recordUnit(int currentTick) {
-        var snapshot = Jval.newObject();
-        snapshot.put(Snapshot.TICK, currentTick);
-
-        var unitsArray = Jval.newArray();
-        Groups.unit.each(unit -> {
-            if (unit == null || !unit.isAdded()) return;
-            var u = Snapshot.Unit.fromUnit(unit).toJson();
-            unitsArray.add(u);
-        });
-
-        snapshot.put(Snapshot.UNITS, unitsArray);
-
-        events.add(snapshot);
+    public void recordBlock(ReplayFrame.Block block) {
+        if (!recording.get() || ReplayConfig.isReplaying) return;
+        snapshot.put(ReplayFrame.BLOCKS, block.toJson());
     }
-
-//    public void recordEvent(String type, Object eventData) {
-//        if (!recording.get() || ReplayState.isReplaying) return;
-//        var json = Jval.newObject();
-//        json.put("tick", tick.get());
-//        json.put("type", type);
-//        json.put("data", eventData.toString());
-//        events.add(json);
-//    }
 }
