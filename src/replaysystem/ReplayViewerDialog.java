@@ -9,6 +9,7 @@ import mindustry.io.SaveIO;
 import mindustry.ui.dialogs.BaseDialog;
 import mindustry.Vars;
 import mindustry.core.GameState;
+import replaysystem.replay_player.ReplayPlayer;
 
 public class ReplayViewerDialog extends BaseDialog {
 
@@ -41,7 +42,7 @@ public class ReplayViewerDialog extends BaseDialog {
         }
     }
 
-    private void playReplay(Replay replay) {
+    private void playReplay(ReplayData replay) {
         hide();
         var initial = ReplayFile.createInitial(replay.folder);
         if (!initial.exists()) {

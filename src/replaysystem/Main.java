@@ -8,9 +8,11 @@ import mindustry.gen.Icon;
 import mindustry.gen.PlayerSpawnCallPacket;
 import mindustry.mod.Mod;
 import mindustry.Vars;
+import replaysystem.replay_player.ReplayPlayer;
 
-// TODO оптимизировать хранение событий и их воспроизведение.
+// TODO оптимизировать хранение событий и их воспроизведение. возможно, переписать с json на sqlite
 
+// TODO сделать опцию в настройках мода повзоляющую сохронять картку целиком раз в какое то время, что бы синхронизовать состояния для реплея.
 
 public class Main extends Mod {
 
@@ -69,7 +71,7 @@ public class Main extends Mod {
                     Vars.ui.menufrag.addButton("@replay-mod.view-replays", Icon.play, () -> new ReplayViewerDialog().show());
 
                     Vars.ui.paused.buttons.row();
-                    Vars.ui.custom.buttons.button(
+                    Vars.ui.paused.buttons.button(
                             "@replay-mod.view-replays", Icon.play, () -> {
                                 Vars.ui.paused.hide();
                                 new ReplayViewerDialog().show();

@@ -2,12 +2,12 @@ package replaysystem;
 
 import arc.files.Fi;
 
-public class Replay {
+public class ReplayData {
     public final Fi folder;
     public final String name;
     public final long timestamp;
 
-    public Replay(Fi folder) {
+    public ReplayData(Fi folder) {
         this.folder = folder;
         this.timestamp = Long.parseLong(folder.name());
         this.name = "Replay " + new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(new java.util.Date(timestamp));

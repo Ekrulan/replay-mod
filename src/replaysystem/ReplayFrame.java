@@ -1,7 +1,9 @@
 package replaysystem;
 
+import arc.util.Log;
 import arc.util.Nullable;
 import arc.util.serialization.Jval;
+import mindustry.content.Blocks;
 import mindustry.game.EventType;
 
 import static replaysystem.Util.safeFloat;
@@ -95,7 +97,7 @@ public class ReplayFrame {
 
     public static class Block {
 
-        public final int build_id;
+        public final int blockId;
         public final short x;
         public final short y;
         public final int rot;
@@ -110,8 +112,8 @@ public class ReplayFrame {
         public static final int HEALTH = 4;
         public static final int TEAM = 5;
 
-        public Block(int buildId, short x, short y, int rot, float health, int team) {
-            this.build_id = buildId;
+        public Block(int blockId, short x, short y, int rot, float health, int team) {
+            this.blockId = blockId;
             this.x = x;
             this.y = y;
             this.rot = rot;
@@ -120,24 +122,21 @@ public class ReplayFrame {
         }
 
         public static ReplayFrame.Block fromDestroy(short x, short y) {
-            return new ReplayFrame.Block(5, x, y, 0, 0, -1);
+            return new ReplayFrame.Block(Blocks.air.id, x, y, 0, 0, -1);
         }
 
         public static ReplayFrame.Block fromEvent(EventType.BlockBuildEndEvent e) {
             var build = e.tile.build;
-            if (build != null) {
-                return new ReplayFrame.Block(build.id, e.tile.x, e.tile.y, build.rotation, build.health, build.team.id);
+            if (build != null && build.block.id != 5) {
+                return new ReplayFrame.Block(build.block.id, e.tile.x, e.tile.y, build.rotation, build.health, build.team.id);
             } else {
                 return fromDestroy(e.tile.x, e.tile.y);
             }
         }
 
         public static @Nullable ReplayFrame.Block fromJson(Jval.JsonArray vl) {
-            if (vl.size != 6) {
-                return null;
-            }
+            if (vl.size != 6) return null;
             int build_id = vl.get(BUILD_ID).asInt();
-            if (build_id == -1) return null;
 
             short x = (short) vl.get(X).asInt();
 
@@ -148,8 +147,8 @@ public class ReplayFrame {
             Float health = safeFloat(vl.get(HEALTH));
             if (health == null) return null;
 
+
             int teamId = vl.get(TEAM).asInt();
-            if (teamId == -1) return null;
 
             return new ReplayFrame.Block(build_id, x, y, rot, health, teamId);
         }
@@ -160,7 +159,7 @@ public class ReplayFrame {
 
         public Jval toJson() {
             var u = Jval.newArray();
-            u.add(this.build_id);
+            u.add(this.blockId);
             u.add(this.x);
             u.add(this.y);
             u.add(this.rot);
