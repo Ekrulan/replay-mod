@@ -6,8 +6,7 @@ import arc.util.Nullable;
 import arc.util.serialization.Jval;
 import mindustry.Vars;
 import replaysystem.ReplayConfig;
-import replaysystem.ReplayData;
-import replaysystem.ReplayFile;
+import replaysystem.data.ReplayFile;
 
 
 public class ReplayPlayer {
@@ -31,7 +30,7 @@ public class ReplayPlayer {
 
     private Seq<Jval> events = new Seq<>();
 
-    private ReplayData currentReplay;
+    private ReplayFile.Reader currentReplay;
     private int snapshotCursor = 0;
     private boolean playing = false;
 
@@ -39,7 +38,7 @@ public class ReplayPlayer {
     private @Nullable Jval currentSnapshot = null;
 
 
-    public void start(ReplayData replay) {
+    public void start(ReplayFile.Reader replay) {
         if (playing) stop();
 
         this.currentReplay = replay;
@@ -50,11 +49,9 @@ public class ReplayPlayer {
         }
         Vars.player.clearUnit();
 
-        loadEvents();
         resetState();
 
         playing = true;
-        Log.info("ReplayPlayer: events size: " + events.size);
     }
 
     public void stop() {
@@ -70,32 +67,35 @@ public class ReplayPlayer {
         Log.info("ReplayPlayer: stopped");
     }
 
-    private void loadEvents() {
-        var file = ReplayFile.createEvents(currentReplay.folder);
-        if (!file.exists()) {
-            Log.warn("events.json not found");
-            return;
-        }
+    private boolean loadEvents() {
 
         try {
-            var json = file.readString();
-            var root = Jval.read(json);
-            if (root.isArray()) {
+            var json = currentReplay.readNextEvent();
+            if (json != null) {
+                var root = Jval.read(json);
+                assert root.isArray();
                 events = root.asArray();
                 Log.info("ReplayPlayer: load " + events.size + " events");
+                return true;
             }
+
+            Log.info("end replay");
+            playing = false;
+
         } catch (Exception e) {
-            Log.err("ReplayPlayer: error reading events.json", e);
+            Log.err("ReplayPlayer: error reading events", e);
         }
+        return false;
     }
 
     public void onUpdate() {
-        if (!playing || events.isEmpty()) return;
+        if (!playing) return;
 
         if (snapshotCursor >= events.size) {
-            Log.info("end replay");
-            playing = false;
-            return;
+            if (!loadEvents()) {
+                return;
+            }
+            resetState();
         }
 
         var worldTick = (int) Vars.state.tick;

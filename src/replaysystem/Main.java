@@ -10,8 +10,6 @@ import mindustry.mod.Mod;
 import mindustry.Vars;
 import replaysystem.replay_player.ReplayPlayer;
 
-// TODO оптимизировать хранение событий и их воспроизведение. возможно, переписать с json на sqlite
-
 // TODO сделать опцию в настройках мода повзоляющую сохронять картку целиком раз в какое то время, что бы синхронизовать состояния для реплея.
 
 public class Main extends Mod {

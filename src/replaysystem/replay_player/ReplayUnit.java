@@ -55,13 +55,13 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
         var prevIds = new IntSet();
         for (var pu : prevUnits.asArray()) {
             int id = pu.asArray().get(ReplayFrame.Unit.ID).asInt();
-            if (id != -1) prevIds.add(id);
+            prevIds.add(id);
         }
+
 
         for (var cu : currUnits.asArray()) {
             var ut = ReplayFrame.Unit.fromJson(cu);
             assert ut != null;
-            if (ut.id == -1) continue;
 
             prevIds.remove(ut.id);
             var unit = Groups.unit.find(u -> u.id == ut.id);
@@ -86,7 +86,11 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
         for (var it = prevIds.iterator(); it.hasNext; ) {
             var missingId = it.next();
             var unit = Groups.unit.find(u -> u.id == missingId);
-            if (unit != null && !unit.dead()) unit.kill();
+            Log.info("unit: " + (unit != null ? unit : "null"));
+            if (unit != null && !unit.dead()) {
+                unit.kill();
+            }
+
         }
     }
 

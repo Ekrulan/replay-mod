@@ -1,6 +1,5 @@
 package replaysystem;
 
-import arc.util.Log;
 import arc.util.Nullable;
 import arc.util.serialization.Jval;
 import mindustry.Vars;
@@ -40,7 +39,6 @@ public class ReplaySnapshotter {
     }
 
     public void recordBlock(ReplayFrame.Block block) {
-        Log.info("record block: " + block);
         blocks.asArray().add(block.toJson());
     }
 }

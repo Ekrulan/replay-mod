@@ -23,6 +23,7 @@ public class ReplayBlock implements ReplayPlayer.SnapshotApplier {
         });
     }
 
+    // TODO deletion of large blocks is displayed incorrectly
     private static boolean placeBlock(Jval b) {
         var block = ReplayFrame.Block.fromJson(b);
         if (block == null) return false;
