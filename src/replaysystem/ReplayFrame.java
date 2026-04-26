@@ -120,7 +120,7 @@ public class ReplayFrame {
             this.team = team;
         }
 
-        public static ReplayFrame.Block fromDestroy(short x, short y) {
+        public static ReplayFrame.Block destroyBlock(short x, short y) {
             return new ReplayFrame.Block(Blocks.air.id, x, y, 0, 0, -1);
         }
 
@@ -129,7 +129,7 @@ public class ReplayFrame {
             if (build != null && build.block.id != 5) {
                 return new ReplayFrame.Block(build.block.id, e.tile.x, e.tile.y, build.rotation, build.health, build.team.id);
             } else {
-                return fromDestroy(e.tile.x, e.tile.y);
+                return destroyBlock(e.tile.x, e.tile.y);
             }
         }
 

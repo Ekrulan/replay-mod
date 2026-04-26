@@ -15,7 +15,7 @@ public class ReplayFile {
     public static final Fi REPLAYS_DIR;
 
     static {
-        Fi dir = Vars.dataDirectory.child("replays");
+        var dir = Vars.dataDirectory.child("replays");
         dir.mkdirs();
         REPLAYS_DIR = dir;
     }

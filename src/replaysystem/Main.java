@@ -9,6 +9,7 @@ import mindustry.gen.PlayerSpawnCallPacket;
 import mindustry.mod.Mod;
 import mindustry.Vars;
 import replaysystem.replay_player.ReplayPlayer;
+import replaysystem.ui.ReplayViewerDialog;
 
 // TODO сделать опцию в настройках мода повзоляющую сохронять картку целиком раз в какое то время, что бы синхронизовать состояния для реплея.
 
@@ -49,11 +50,20 @@ public class Main extends Mod {
 
         Events.on(
                 BlockBuildEndEvent.class,
-                e -> ReplayRecorder.instance.recordBlock(ReplayFrame.Block.fromEvent(e))
+                e -> {
+                    if (ReplayRecorder.instance.isRecording()) {
+                        ReplayRecorder.instance.recordBlock(ReplayFrame.Block.fromEvent(e));
+                    }
+                }
         );
         Events.on(
                 BlockDestroyEvent.class,
-                e -> ReplayRecorder.instance.recordBlock(ReplayFrame.Block.fromDestroy(e.tile.x, e.tile.y))
+                e ->
+                {
+                    if (ReplayRecorder.instance.isRecording()) {
+                        ReplayRecorder.instance.recordBlock(ReplayFrame.Block.destroyBlock(e.tile.x, e.tile.y));
+                    }
+                }
         );
 
         Events.run(

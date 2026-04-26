@@ -5,6 +5,9 @@ import arc.util.serialization.Jval;
 import mindustry.Vars;
 import mindustry.gen.Groups;
 
+// TODO записывает одно и тоже два раза.
+
+// TODO событий нет, tick тоже не писать. для каждого файла счетать при какой частоте тиков он был снят
 public class ReplaySnapshotter {
     private Jval snapshot = Jval.newObject();
     private Jval blocks = Jval.newArray();

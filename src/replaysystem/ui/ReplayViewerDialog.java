@@ -1,4 +1,4 @@
-package replaysystem;
+package replaysystem.ui;
 
 import arc.Events;
 import arc.scene.ui.layout.Table;
@@ -8,6 +8,7 @@ import mindustry.gen.Groups;
 import mindustry.ui.dialogs.BaseDialog;
 import mindustry.Vars;
 import mindustry.core.GameState;
+import replaysystem.ReplayConfig;
 import replaysystem.data.ReplayFile;
 import replaysystem.replay_player.ReplayPlayer;
 

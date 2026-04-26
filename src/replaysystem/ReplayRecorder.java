@@ -38,7 +38,8 @@ public class ReplayRecorder {
         work_dir.writeEvent(events.toString());
 
         var meta = SaveIO.getMeta(work_dir.getFirstMap());
-
+        // TODO meta.map может быть null;
+        // TODO  это время одного файла, их может быть несколько
         var duration = events.get(events.size - 1).get(ReplayFrame.TICK).asInt() - events.get(0).get(ReplayFrame.TICK).asInt();
 
         work_dir.writeInfo(new InfoFile(meta.map.name(), duration, meta.timestamp, String.format("%dx%d", meta.map.width, meta.map.height)));
@@ -48,8 +49,11 @@ public class ReplayRecorder {
         work_dir = null;
     }
 
+    public boolean isRecording() {
+        return recording.get() && !ReplayConfig.isReplaying;
+    }
+
     public void onUpdate() {
-        if (!recording.get() || ReplayConfig.isReplaying) return;
 
         var maybeSnapshot = snapshotter.createSnapshot();
         if (maybeSnapshot != null) {
@@ -58,7 +62,6 @@ public class ReplayRecorder {
     }
 
     public void recordBlock(ReplayFrame.Block block) {
-        if (!recording.get() || ReplayConfig.isReplaying) return;
         snapshotter.recordBlock(block);
     }
 }
