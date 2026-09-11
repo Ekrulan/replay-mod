@@ -7,6 +7,7 @@ import mindustry.io.SaveIO;
 import replaysystem.data.InfoFile;
 import replaysystem.data.ReplayFile;
 
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ReplayRecorder {
@@ -38,11 +39,41 @@ public class ReplayRecorder {
         work_dir.writeEvent(events.toString());
 
         var meta = SaveIO.getMeta(work_dir.getFirstMap());
-        // TODO meta.map может быть null;
+
+        String mapName = null;
+        int width = -1;
+        int height = -1;
+
+        if (meta.map != null) {
+            mapName = meta.map.name();
+            width = meta.map.width;
+            height = meta.map.height;
+        } else {
+
+            for (var entry : meta.tags.iterator()) {
+                switch (entry.key) {
+                    case "mapname":
+                        mapName = entry.value;
+                        break;
+                    case "width":
+                        width = Integer.parseInt(entry.value);
+                        break;
+                    case "height":
+                        height = Integer.parseInt(entry.value);
+                        break;
+                }
+            }
+
+            if (mapName == null || width < 0 || height < 0) {
+                throw new IllegalStateException("missing map metadata");
+            }
+        }
+
+
         // TODO  это время одного файла, их может быть несколько
         var duration = events.get(events.size - 1).get(ReplayFrame.TICK).asInt() - events.get(0).get(ReplayFrame.TICK).asInt();
 
-        work_dir.writeInfo(new InfoFile(meta.map.name(), duration, meta.timestamp, String.format("%dx%d", meta.map.width, meta.map.height)));
+        work_dir.writeInfo(new InfoFile(mapName, duration, Instant.now().getEpochSecond(), String.format("%dx%d", width, height)));
 
         Log.info("ReplayRecorder: saved (" + events.size + " events)");
         events.clear();

@@ -2,6 +2,7 @@ package replaysystem;
 
 import arc.Core;
 import arc.Events;
+import arc.scene.ui.layout.Table;
 import arc.util.Log;
 import mindustry.game.EventType.*;
 import mindustry.gen.Icon;
@@ -9,6 +10,7 @@ import mindustry.gen.PlayerSpawnCallPacket;
 import mindustry.mod.Mod;
 import mindustry.Vars;
 import replaysystem.replay_player.ReplayPlayer;
+import replaysystem.ui.ReplayControls;
 import replaysystem.ui.ReplayViewerDialog;
 
 // TODO сделать опцию в настройках мода повзоляющую сохронять картку целиком раз в какое то время, что бы синхронизовать состояния для реплея.
@@ -20,7 +22,18 @@ public class Main extends Mod {
 
         Events.on(
                 WorldLoadEvent.class, e -> {
+                    Log.info("isReplaying: " + ReplayConfig.isReplaying + " isLoadingReplay: " + ReplayConfig.isLoadingReplay);
                     if (ReplayConfig.isReplaying || ReplayConfig.isLoadingReplay) {
+                        var root = new Table();
+                        root.setFillParent(true);
+
+                        var replayUi = ReplayControls.instance.buildHud(ReplayPlayer.instance);
+
+                        ReplayPlayer.instance.listeners.add(ReplayControls.instance::updateProgressBase);
+
+                        root.add(replayUi).expandY().bottom().padBottom(20f);
+
+                        Vars.ui.hudGroup.addChild(root);
                         return;
                     }
                     ReplayRecorder.instance.start();
@@ -72,6 +85,7 @@ public class Main extends Mod {
                     ReplayPlayer.instance.onUpdate();
                 }
         );
+
 
         // ui
         Events.on(

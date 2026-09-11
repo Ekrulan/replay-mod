@@ -1,5 +1,6 @@
 package replaysystem;
 
+import arc.util.Log;
 import arc.util.Nullable;
 import arc.util.serialization.Jval;
 import mindustry.content.Blocks;

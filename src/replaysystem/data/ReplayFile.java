@@ -9,6 +9,7 @@ import mindustry.io.SaveIO;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReplayFile {
@@ -75,10 +76,10 @@ public class ReplayFile {
             SaveIO.save(mapsDir.child(nextName()));
         }
 
-        public @Nullable Fi getFirstMap() {
+        public Fi getFirstMap() {
             var l = mapsDir.list();
-            if (l.length < 1) {
-                return null;
+            if (l.length == 0) {
+                throw new NoSuchElementException("No maps available");
             } else {
                 return l[0];
             }
@@ -90,12 +91,12 @@ public class ReplayFile {
     }
 
     public class Reader {
-        private final Fi[] eventFiles = sortedOrEmpty(eventsDir.list());
-        private final Fi[] mapFiles = sortedOrEmpty(mapsDir.list());
+        private final Fi[] eventFiles = sorted(eventsDir.list());
+        private final Fi[] mapFiles = sorted(mapsDir.list());
         private int eventIdx = 0;
         private int mapIdx = 0;
 
-        private Fi[] sortedOrEmpty(Fi[] arr) {
+        private Fi[] sorted(Fi[] arr) {
             Arrays.sort(arr, Comparator.comparingInt(fi -> Integer.parseInt(fi.name())));
             return arr;
         }
@@ -111,6 +112,7 @@ public class ReplayFile {
             return true;
         }
 
+        // TODO хранить все ивенты в одном файле; разработать свой формат хранения, читать через RandomAccessFile, по чанкам
         @Nullable
         public String readNextEvent() {
             if (eventIdx >= eventFiles.length) return null;

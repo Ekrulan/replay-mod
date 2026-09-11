@@ -5,8 +5,11 @@ import arc.util.Log;
 import arc.util.Nullable;
 import arc.util.serialization.Jval;
 import mindustry.Vars;
+import mindustry.game.Team;
 import replaysystem.ReplayConfig;
 import replaysystem.data.ReplayFile;
+
+import java.util.function.Consumer;
 
 
 public class ReplayPlayer {
@@ -19,19 +22,23 @@ public class ReplayPlayer {
         }
     }
 
+    public final Seq<Consumer<ReplayPlayer>> listeners = new Seq<>();
+
     private final Seq<SnapshotApplier> handlers;
 
     public static final ReplayPlayer instance = new ReplayPlayer(Seq.with(new ReplayUnit(), new ReplayBlock()));
 
 
-    private ReplayPlayer(Seq<SnapshotApplier> hds) {
+    public ReplayPlayer(Seq<SnapshotApplier> hds) {
         this.handlers = hds;
     }
 
     private Seq<Jval> events = new Seq<>();
 
     private ReplayFile.Reader currentReplay;
-    private int snapshotCursor = 0;
+
+    public int snapshotCursor = 0;
+
     private boolean playing = false;
 
     private @Nullable Jval previousSnapshot = null;
@@ -44,10 +51,7 @@ public class ReplayPlayer {
         this.currentReplay = replay;
         ReplayConfig.isReplaying = true;
 
-        if (Vars.player.unit() != null) {
-            Vars.player.unit().kill();
-        }
-        Vars.player.clearUnit();
+        Vars.player.team(Team.derelict);
 
         resetState();
 
@@ -97,6 +101,8 @@ public class ReplayPlayer {
             }
             resetState();
         }
+
+        listeners.each(fn -> fn.accept(this));
 
         var worldTick = (int) Vars.state.tick;
 
