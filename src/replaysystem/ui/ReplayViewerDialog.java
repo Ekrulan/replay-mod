@@ -16,7 +16,7 @@ public class ReplayViewerDialog extends BaseDialog {
 
     public ReplayViewerDialog() {
         super("@replay-mod.view-replays");
-        rebuild();
+        this.rebuild();
         this.addCloseButton();
     }
 
@@ -53,6 +53,9 @@ public class ReplayViewerDialog extends BaseDialog {
         ReplayConfig.isLoadingReplay = true;
         ReplayConfig.isReplaying = false;
 
+        var root = new GameWindow();
+
+
         arc.Core.app.post(() -> {
             try {
                 Vars.ui.loadfrag.show("@replay-mod.loading-replay");
@@ -60,7 +63,8 @@ public class ReplayViewerDialog extends BaseDialog {
                 Groups.unit.clear();
                 Groups.build.clear();
 
-                replay.loadNextMap();
+                var ok = replay.loadNextMap();
+                assert ok;
 
                 Vars.state.set(GameState.State.playing);
                 Events.fire(new EventType.WorldLoadEvent());
@@ -69,6 +73,13 @@ public class ReplayViewerDialog extends BaseDialog {
                 ReplayConfig.isLoadingReplay = false;
                 ReplayConfig.isReplaying = true;
                 ReplayPlayer.instance.start(replay);
+                var replayUi = ReplayControls.instance.buildHud(ReplayPlayer.instance);
+
+                root.add(replayUi).expandY().bottom().padBottom(20f);
+                ReplayPlayer.instance.listeners.add(ReplayControls.instance::updateProgressBase);
+
+                Vars.ui.hudGroup.addChild(root);
+
 
                 Vars.ui.loadfrag.hide();
                 Log.info("ReplayViewer: replay playing");

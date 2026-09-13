@@ -7,6 +7,7 @@ import arc.util.serialization.Jval;
 import mindustry.Vars;
 import mindustry.game.Team;
 import replaysystem.ReplayConfig;
+import replaysystem.data.InfoFile;
 import replaysystem.data.ReplayFile;
 
 import java.util.function.Consumer;
@@ -37,6 +38,8 @@ public class ReplayPlayer {
 
     private ReplayFile.Reader currentReplay;
 
+    public InfoFile replayInfoFile;
+
     public int snapshotCursor = 0;
 
     private boolean playing = false;
@@ -49,6 +52,8 @@ public class ReplayPlayer {
         if (playing) stop();
 
         this.currentReplay = replay;
+        this.replayInfoFile = replay.readInfo();
+
         ReplayConfig.isReplaying = true;
 
         Vars.player.team(Team.derelict);

@@ -5,11 +5,13 @@ import arc.struct.IntSet;
 import arc.util.Log;
 import arc.util.serialization.Jval;
 import mindustry.Vars;
+import mindustry.entities.units.UnitController;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
+import mindustry.gen.Unit;
 import replaysystem.ReplayFrame;
 
-import static replaysystem.Util.safeFloat;
+import static replaysystem.helpers.Util.safeFloat;
 
 public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
 
@@ -30,7 +32,7 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
             var unit = Groups.unit.find(unit2 -> unit2.id == unitDt.id);
 
             if (unit == null) {
-                var unitType = Vars.content.units().find(ut -> ut.name.equals(unitDt.type));
+                var unitType = Vars.content.unit(unitDt.type);
                 if (unitType == null) {
                     continue;
                 }
@@ -61,11 +63,25 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
 
         for (var cu : currUnits.asArray()) {
             var ut = ReplayFrame.Unit.fromJson(cu);
+
             assert ut != null;
 
             prevIds.remove(ut.id);
-            var unit = Groups.unit.find(u -> u.id == ut.id);
+//            var unit = Groups.unit.find(u -> u.id == ut.id);
+            var unit = Groups.unit.getByID(ut.id);
             if (unit == null || unit.dead()) continue;
+
+            unit.controller(new UnitController() {
+                @Override
+                public void unit(Unit unit) {
+
+                }
+
+                @Override
+                public Unit unit() {
+                    return null;
+                }
+            });
 
             var pu = findUnitById(prevUnits, ut.id);
             if (pu == null) continue;
@@ -81,22 +97,39 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
 
             unit.set(Mathf.lerp(prevX, ut.x, 1f), Mathf.lerp(prevY, ut.y, 1f));
             unit.rotation = lerpAngle(prevRot, ut.rot);
+
+            if (ut.target != null) {
+                unit.aim(ut.target.x, ut.target.y);
+                unit.isShooting = true;
+
+                for (var mount : unit.mounts) {
+                    mount.aimX = ut.target.x;
+                    mount.aimY = ut.target.y;
+                    mount.shoot = true;
+                    mount.rotate = true;
+                }
+            } else {
+                unit.isShooting = false;
+            }
+
         }
 
         for (var it = prevIds.iterator(); it.hasNext; ) {
             var missingId = it.next();
-            var unit = Groups.unit.find(u -> u.id == missingId);
-            Log.info("unit: " + (unit != null ? unit : "null"));
+            var unit = Groups.unit.getByID(missingId);
             if (unit != null && !unit.dead()) {
                 unit.kill();
             }
-
         }
     }
 
 
     private static float lerpAngle(float from, float to) {
-        var delta = ((to - from + 180f) % 360f) - 180f;
+        float delta = to - from;
+
+        if (delta > 180f) delta -= 360f;
+        else if (delta < -180f) delta += 360f;
+
         return from + delta;
     }
 

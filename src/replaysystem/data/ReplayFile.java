@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// TODO сделать, что бы папка с реплеем хранилась в zip формате.
 public class ReplayFile {
     public static final Fi REPLAYS_DIR;
 
@@ -29,7 +30,7 @@ public class ReplayFile {
     private final AtomicInteger counter = new AtomicInteger();
 
     public ReplayFile() {
-        this(System.currentTimeMillis() + "");
+        this(String.valueOf(System.currentTimeMillis()));
     }
 
     public ReplayFile(String name) {
@@ -101,7 +102,6 @@ public class ReplayFile {
             return arr;
         }
 
-        @Nullable
         public InfoFile readInfo() {
             return InfoFile.fromString(dir.child("info").readString());
         }

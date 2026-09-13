@@ -1,12 +1,13 @@
 package replaysystem;
 
-import arc.util.Log;
 import arc.util.Nullable;
 import arc.util.serialization.Jval;
 import mindustry.content.Blocks;
 import mindustry.game.EventType;
+import replaysystem.helpers.Coords2D;
 
-import static replaysystem.Util.safeFloat;
+
+import static replaysystem.helpers.Util.safeFloat;
 
 public class ReplayFrame {
 
@@ -18,12 +19,13 @@ public class ReplayFrame {
 
     public static class Unit {
         public final int id;
-        public final String type;
+        public final short type;
         public final float x;
         public final float y;
         public final float rot;
         public final float health;
         public final int team;
+        public final @Nullable Coords2D target;
 
         public static final int ID = 0;
         public static final int TYPE = 1;
@@ -32,32 +34,38 @@ public class ReplayFrame {
         public static final int ROT = 4;
         public static final int HEALTH = 5;
         public static final int TEAM = 6;
+        public static final int TARGET = 7;
 
-        public Unit(int id, String type, float x, float y, float rot, float health, int team) {
+        public Unit(int id, short typeId, float x, float y, float rot, float health, int team, @Nullable Coords2D target) {
             this.id = id;
-            this.type = type;
+            this.type = typeId;
             this.x = x;
             this.y = y;
             this.rot = rot;
             this.health = health;
             this.team = team;
+            this.target = target;
         }
 
         public static Unit fromUnit(mindustry.gen.Unit unit) {
-            return new Unit(unit.id, unit.type.name, unit.x, unit.y, unit.rotation, unit.health, unit.team.id);
+            Coords2D target = null;
+            if (unit.isShooting) {
+                target = new Coords2D(unit.aimX, unit.aimY);
+            }
+            return new Unit(unit.id, unit.type.id, unit.x, unit.y, unit.rotation, unit.health, unit.team.id, target);
         }
 
         public static @Nullable ReplayFrame.Unit fromJson(Jval.JsonArray vl) {
 
-            if (vl.size != 7) {
+            if (vl.size != 8) {
                 return null;
             }
 
             int id = vl.get(ID).asInt();
             if (id == -1) return null;
 
-            String typeName = vl.get(TYPE).asString();
-            if (typeName == null) return null;
+            short typeId = (short) vl.get(TYPE).asInt();
+            if (typeId == -1) return null;
 
             Float x = safeFloat(vl.get(X));
             if (x == null) return null;
@@ -74,7 +82,11 @@ public class ReplayFrame {
             int teamId = vl.get(TEAM).asInt();
             if (teamId == -1) return null;
 
-            return new ReplayFrame.Unit(id, typeName, x, y, rot, health, teamId);
+            var targetRaw = vl.get(TARGET);
+
+            var target = Coords2D.fromJval(targetRaw);
+
+            return new ReplayFrame.Unit(id, typeId, x, y, rot, health, teamId, target);
         }
 
         public static @Nullable ReplayFrame.Unit fromJson(Jval vl) {
@@ -90,6 +102,11 @@ public class ReplayFrame {
             u.add(this.rot);
             u.add(this.health);
             u.add(this.team);
+            if (this.target != null) {
+                u.add(this.target.toJval());
+            } else {
+                u.add(Jval.NULL);
+            }
             return u;
         }
     }

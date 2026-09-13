@@ -18,6 +18,7 @@ public class ReplayControls {
     public final static ReplayControls instance = new ReplayControls();
 
     public Table buildHud(ReplayPlayer replayPlayer) {
+
         var tbl = new Table();
 
         tbl.background(mindustry.ui.Styles.black6);
@@ -27,13 +28,13 @@ public class ReplayControls {
         tbl.add("panel").color(arc.graphics.Color.acid).padBottom(10f).row();
 
         // TODO
-        this.progressBar = new Slider(0f, 1000f, 1f, false);
+        this.progressBar = new Slider(0f, replayPlayer.replayInfoFile.duration, 1f, false);
 
         progressBar.changed(() -> {
             replayPlayer.snapshotCursor = (int) progressBar.getValue();
         });
 
-        tbl.add(progressBar).width(150f).row();
+        tbl.add(progressBar).width(arc.Core.graphics.getWidth() / 2f).row();
         return tbl;
     }
 

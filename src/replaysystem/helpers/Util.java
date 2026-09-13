@@ -1,4 +1,4 @@
-package replaysystem;
+package replaysystem.helpers;
 
 import arc.util.Nullable;
 import arc.util.serialization.Jval;
