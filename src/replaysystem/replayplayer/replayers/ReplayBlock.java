@@ -1,4 +1,4 @@
-package replaysystem.replay_player;
+package replaysystem.replayplayer.replayers;
 
 import arc.util.Log;
 import arc.util.serialization.Jval;
@@ -6,6 +6,7 @@ import mindustry.Vars;
 import mindustry.content.Blocks;
 import mindustry.game.Team;
 import replaysystem.ReplayFrame;
+import replaysystem.replayplayer.ReplayPlayer;
 
 
 public class ReplayBlock implements ReplayPlayer.SnapshotApplier {

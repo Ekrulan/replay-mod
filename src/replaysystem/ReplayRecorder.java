@@ -77,6 +77,7 @@ public class ReplayRecorder {
 
         Log.info("ReplayRecorder: saved (" + events.size + " events)");
         events.clear();
+        work_dir.zip();
         work_dir = null;
     }
 

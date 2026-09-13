@@ -1,4 +1,4 @@
-package replaysystem.replay_player;
+package replaysystem.replayplayer.replayers;
 
 import arc.math.Mathf;
 import arc.struct.IntSet;
@@ -10,6 +10,7 @@ import mindustry.game.Team;
 import mindustry.gen.Groups;
 import mindustry.gen.Unit;
 import replaysystem.ReplayFrame;
+import replaysystem.replayplayer.ReplayPlayer;
 
 import static replaysystem.helpers.Util.safeFloat;
 

@@ -1,4 +1,4 @@
-package replaysystem.replay_player;
+package replaysystem.replayplayer;
 
 import arc.struct.Seq;
 import arc.util.Log;
@@ -9,6 +9,8 @@ import mindustry.game.Team;
 import replaysystem.ReplayConfig;
 import replaysystem.data.InfoFile;
 import replaysystem.data.ReplayFile;
+import replaysystem.replayplayer.replayers.ReplayBlock;
+import replaysystem.replayplayer.replayers.ReplayUnit;
 
 import java.util.function.Consumer;
 

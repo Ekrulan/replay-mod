@@ -8,10 +8,13 @@ import mindustry.gen.Icon;
 import mindustry.gen.PlayerSpawnCallPacket;
 import mindustry.mod.Mod;
 import mindustry.Vars;
-import replaysystem.replay_player.ReplayPlayer;
+import replaysystem.replayplayer.ReplayPlayer;
 import replaysystem.ui.ReplayViewerDialog;
 
-// TODO сделать опцию в настройках мода повзоляющую сохронять картку целиком раз в какое то время, что бы синхронизовать состояния для реплея.
+// TODO сделать опцию в настройках мода позволяющую сохранять картку целиком раз в какое то время, что бы синхронизовать состояния мира для
+//  реплея.
+
+// TODO нужно сильно оптимизировать формат хранения данных.
 
 public class Main extends Mod {
 
@@ -20,7 +23,6 @@ public class Main extends Mod {
 
         Events.on(
                 WorldLoadEvent.class, e -> {
-                    Log.info("isReplaying: " + ReplayConfig.isReplaying + " isLoadingReplay: " + ReplayConfig.isLoadingReplay);
                     if (ReplayConfig.isReplaying || ReplayConfig.isLoadingReplay) {
                         return;
                     }

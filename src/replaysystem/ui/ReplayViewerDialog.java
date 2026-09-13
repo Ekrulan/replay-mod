@@ -10,7 +10,7 @@ import mindustry.Vars;
 import mindustry.core.GameState;
 import replaysystem.ReplayConfig;
 import replaysystem.data.ReplayFile;
-import replaysystem.replay_player.ReplayPlayer;
+import replaysystem.replayplayer.ReplayPlayer;
 
 public class ReplayViewerDialog extends BaseDialog {
 
@@ -29,11 +29,11 @@ public class ReplayViewerDialog extends BaseDialog {
             return;
         }
         for (var replay : replays) {
-            var info = replay.readInfo();
+            var info = replay.getInfoFile();
             var row = new Table();
             row.left();
             row.add(info.mapName).left().growX();
-            row.button("@replay-mod.button.play", () -> playReplay(replay)).padLeft(12).width(100);
+            row.button("@replay-mod.button.play", () -> playReplay(replay.createReader())).padLeft(12).width(100);
             row.button(
                     "@replay-mod.button.delete", () -> {
                         replay.delete();

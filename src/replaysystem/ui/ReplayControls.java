@@ -2,14 +2,14 @@ package replaysystem.ui;
 
 import arc.scene.ui.Slider;
 import arc.scene.ui.layout.Table;
-import arc.util.Log;
-import replaysystem.replay_player.ReplayPlayer;
+import replaysystem.replayplayer.ReplayPlayer;
 
 public class ReplayControls {
 
     public Slider progressBar;
     public Table tbl;
 
+    // TODO
     public void ReplayPlayer() {
         this.tbl = new Table();
     }
