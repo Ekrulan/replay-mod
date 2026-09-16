@@ -1,38 +1,44 @@
 package replaysystem.replayplayer.replayers;
 
 import arc.util.Log;
-import arc.util.serialization.Jval;
 import mindustry.Vars;
 import mindustry.content.Blocks;
 import mindustry.game.Team;
-import replaysystem.ReplayFrame;
+import replaysystem.replayfmt.ReplayFmtMap;
+import replaysystem.replayfmt.Types;
+import replaysystem.replayfmt.types.Block;
 import replaysystem.replayplayer.ReplayPlayer;
 
 
 public class ReplayBlock implements ReplayPlayer.SnapshotApplier {
     @Override
-    public void applySnapshot(Jval snapshot) {
-        var blocks = snapshot.get(ReplayFrame.BLOCKS);
+    public void applySnapshot(ReplayFmtMap snapshot) {
+        var blocks = snapshot.get(Types.BLOCK);
         if (blocks == null) {
             return;
         }
 
-        blocks.asArray().each((b) -> {
-            if (!placeBlock(b)) {
+//        Log.info("ReplayBlock: " + blocks);
+
+        blocks.each((b) -> {
+            if (!placeBlock((Block) b)) {
                 Log.warn("ReplayBlock: failed to placed " + b);
             }
         });
     }
 
     // TODO deletion of large blocks is displayed incorrectly
-    private static boolean placeBlock(Jval b) {
-        var block = ReplayFrame.Block.fromJson(b);
-        if (block == null) return false;
+    private static boolean placeBlock(Block block) {
 
         var tile = Vars.world.tile(block.x, block.y);
         if (tile == null) return false;
 
-        var blc = Vars.content.block(block.blockId);
+        if (block.build == null) {
+            tile.setAir();
+            return true;
+        }
+
+        var blc = Vars.content.block(block.build.blockId);
 
         if (blc == null) return false;
 
@@ -43,9 +49,9 @@ public class ReplayBlock implements ReplayPlayer.SnapshotApplier {
         var build = tile.build;
         if (build == null) return false;
 
-        build.team = Team.get(block.team);
-        build.rotation = block.rot;
-        build.health = block.health;
+        build.team = Team.get(block.build.team);
+        build.rotation = block.build.rot;
+        build.health = block.build.health;
 
         build.add();
         return true;

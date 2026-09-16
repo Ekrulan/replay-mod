@@ -8,7 +8,11 @@ import arc.util.Nullable;
 import mindustry.Vars;
 import mindustry.io.SaveIO;
 import replaysystem.helpers.ZipHelper;
+import replaysystem.replayfmt.ReplayFmtMap;
+import replaysystem.replayfmt.ReplayFmtReader;
+import replaysystem.replayfmt.ReplayFmtWriter;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,6 +34,7 @@ public class ReplayFile {
     }
 
     private static final String EVENTS_NAME_DIR = "events";
+    private static final String EVENT_NAME = "event";
     private static final String MAPS_NAME_DIR = "maps";
     private static final String INFO_NAME_FILE = "info";
 
@@ -115,6 +120,13 @@ public class ReplayFile {
     }
 
     public class Writer {
+
+        private final ReplayFmtWriter rfw;
+
+        public Writer() {
+            this.rfw = new ReplayFmtWriter(eventsDir.child(EVENT_NAME));
+        }
+
         private String nextName() {
             return String.valueOf(counter.getAndIncrement());
         }
@@ -136,27 +148,34 @@ public class ReplayFile {
             }
         }
 
-        public void writeEvent(String ev) {
-            eventsDir.child(nextName()).writeString(ev);
+        public void write(Object obj) {
+            this.rfw.write(obj);
         }
+
+//        public void writeEvent(String ev) {
+//            eventsDir.child(nextName()).writeString(ev);
+//        }
 
         public void zip() {
             ReplayFile.this.zip();
+            if (this.rfw != null) {
+//                this.rfw.close();
+            }
         }
     }
 
-    public class Reader {
-        private final Fi[] eventFiles;
+    public class Reader implements Closeable {
         private final Fi[] mapFiles;
-        private int eventIdx = 0;
         private int mapIdx = 0;
+
+        private final ReplayFmtReader rfr;
 
         public Reader() {
             if (!workDir.exists() && zipFile.exists()) {
                 unzip(zipFile, workDir);
             }
 
-            this.eventFiles = sorted(eventsDir.list());
+            this.rfr = new ReplayFmtReader(eventsDir.child(EVENT_NAME));
             this.mapFiles = sorted(mapsDir.list());
         }
 
@@ -176,9 +195,15 @@ public class ReplayFile {
         }
 
         @Nullable
-        public String readNextEvent() {
-            if (eventIdx >= eventFiles.length) return null;
-            return eventFiles[eventIdx++].readString();
+        public ReplayFmtMap readNextSnapshot() {
+            return rfr.readSnapshot();
+        }
+
+        @Override
+        public void close() { // TODO закрывать
+            if (this.rfr != null) {
+                this.rfr.close();
+            }
         }
     }
 }

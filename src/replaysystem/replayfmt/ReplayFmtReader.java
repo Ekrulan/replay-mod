@@ -1,6 +1,7 @@
 package replaysystem.replayfmt;
 
 import arc.files.Fi;
+import arc.util.Log;
 import arc.util.Nullable;
 import replaysystem.replayfmt.types.Block;
 import replaysystem.replayfmt.types.Tick;
@@ -11,75 +12,107 @@ import java.io.RandomAccessFile;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+
 public class ReplayFmtReader implements Iterable<Object>, AutoCloseable {
     private final RandomAccessFile replayFile;
     private final RandomAccessFile indexFile;
+
+    private final ReplayFmtIterator globalIterator = new ReplayFmtIterator();
+
     private Object nextElement = null;
-    private boolean endOfFile = false;
 
     public ReplayFmtReader(Fi inputFile) {
         try {
             this.replayFile = new RandomAccessFile(inputFile.file(), "r");
-            this.indexFile = new RandomAccessFile(inputFile.sibling(".index").file(), "r");
+            this.indexFile = new RandomAccessFile(Util.dotIndex(inputFile).file(), "r");
         } catch (Exception e) {
             throw new RuntimeException("Failed to open replay file", e);
         }
     }
 
-    @Override
-    public Iterator<Object> iterator() {
-        return new Iterator<>() {
-            @Override
-            public boolean hasNext() {
-                if (nextElement == null && !endOfFile) {
-                    nextElement = readNextElement();
-                }
-                return nextElement != null;
+    public class ReplayFmtIterator implements Iterator<Object> {
+        @Override
+        public boolean hasNext() {
+            if (nextElement == null) {
+                nextElement = readNextElement();
             }
+            return nextElement != null;
+        }
 
-            @Override
-            public Object next() {
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-                var element = nextElement;
-                nextElement = null;
-                return element;
+        public Object peek() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
             }
-        };
+            return nextElement;
+        }
+
+        @Override
+        public Object next() {
+            var element = this.peek();
+            nextElement = null;
+            return element;
+        }
+    }
+
+    @Override
+    public ReplayFmtIterator iterator() {
+        return this.globalIterator;
+    }
+
+    public @Nullable ReplayFmtMap readSnapshot() {
+        var iter = this.iterator();
+
+        if (!iter.hasNext()) {
+            return null;
+        }
+
+        var map = new ReplayFmtMap();
+        var hasTick = false;
+
+        while (iter.hasNext()) {
+            var obj = iter.peek();
+            if (obj instanceof Tick) {
+                if (hasTick) {
+                    break;
+                }
+                hasTick = true;
+                map.add(Types.TICK, iter.next());
+                continue;
+            }
+            if (obj instanceof Unit) {
+                map.add(Types.UNIT, obj);
+            } else if (obj instanceof Block) {
+//                Log.info("readSnapshot, block: " + obj);
+                map.add(Types.BLOCK, obj);
+            } else {
+                throw new IllegalArgumentException("invalid object type: " + obj);
+            }
+            iter.next();
+        }
+        return map;
     }
 
     private @Nullable Object readNextElement() throws IllegalArgumentException {
         try {
             int type = replayFile.read();
             if (type == -1) {
-                close();
-                endOfFile = true;
                 return null;
             }
 
             return switch (type) {
-                case 1 -> // TICK
-                        Tick.fromInpStream(replayFile);
-                case 2 -> // UNITS
-                        Unit.fromInpStream(replayFile);
-                case 3 -> // BLOCKS
-                        Block.fromInpStream(replayFile);
-                default -> {
-                    close();
-                    throw new IllegalStateException("Unknown data type: " + type);
-                }
+                case Types.TICK -> Tick.fromInpStream(replayFile);
+                case Types.UNIT -> Unit.fromInpStream(replayFile);
+                case Types.BLOCK -> Block.fromInpStream(replayFile);
+                default -> throw new IllegalStateException("Unknown data type: " + type);
             };
         } catch (IOException e) {
-            close();
             throw new RuntimeException("Error reading replay stream", e);
         }
     }
 
-    /// The function takes the tick index and moves the cursor according to that position. This is needed so that the replay can be scrubbed.
     public void seekTickByIndex(int index) {
         try {
-            var position = index * Integer.BYTES;
+            var position = (long) index * Integer.BYTES;
 
             if (position < 0 || position > indexFile.length()) {
                 throw new IllegalArgumentException("Index out of bounds: " + index);
@@ -98,13 +131,25 @@ public class ReplayFmtReader implements Iterable<Object>, AutoCloseable {
 
     @Override
     public void close() {
-        try {
-            if (replayFile != null) replayFile.close();
-        } catch (IOException ignored) {
+        IOException exception = null;
+
+        if (replayFile != null) {
+            try {
+                replayFile.close();
+            } catch (IOException e) {
+                exception = e;
+            }
         }
-        try {
-            if (indexFile != null) indexFile.close();
-        } catch (IOException ignored) {
+        if (indexFile != null) {
+            try {
+                indexFile.close();
+            } catch (IOException e) {
+                if (exception == null) exception = e;
+            }
+        }
+
+        if (exception != null) {
+            throw new RuntimeException("Failed to close files safely", exception);
         }
     }
 }

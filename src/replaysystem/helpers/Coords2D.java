@@ -41,6 +41,6 @@ public class Coords2D {
 
     @Override
     public String toString() {
-        return String.format("[%s]: x=%f, y=%f", this.getClass().getName(), this.x, this.y);
+        return String.format("[Coords2D]: x=%f, y=%f", this.x, this.y);
     }
 }

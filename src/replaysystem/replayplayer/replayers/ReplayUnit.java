@@ -2,70 +2,62 @@ package replaysystem.replayplayer.replayers;
 
 import arc.math.Mathf;
 import arc.struct.IntSet;
-import arc.util.Log;
-import arc.util.serialization.Jval;
+import arc.struct.Seq;
+import arc.util.Nullable;
 import mindustry.Vars;
 import mindustry.entities.units.UnitController;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
-import mindustry.gen.Unit;
-import replaysystem.ReplayFrame;
+import replaysystem.replayfmt.ReplayFmtMap;
+import replaysystem.replayfmt.Types;
+import replaysystem.replayfmt.types.Unit;
 import replaysystem.replayplayer.ReplayPlayer;
 
-import static replaysystem.helpers.Util.safeFloat;
 
 public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
 
     @Override
-    public void applySnapshot(Jval snapshot) {
-        var unitsArray = snapshot.get(ReplayFrame.UNITS);
-        if (unitsArray == null || !unitsArray.isArray()) return;
+    public void applySnapshot(ReplayFmtMap snapshot) {
+        var unitsArray = snapshot.get(Types.UNIT);
+        if (unitsArray == null) return;
 
-        for (var u : unitsArray.asArray()) {
+        for (var obj : unitsArray) {
 
-            var unitDt = ReplayFrame.Unit.fromJson(u);
+            var un = (Unit) obj;
 
-            if (unitDt == null) {
-                Log.warn("ReplayPlayer: invalid unit part: " + u);
-                continue;
-            }
-
-            var unit = Groups.unit.find(unit2 -> unit2.id == unitDt.id);
+            var unit = Groups.unit.getByID(un.id);
 
             if (unit == null) {
-                var unitType = Vars.content.unit(unitDt.type);
+                var unitType = Vars.content.unit(un.type);
                 if (unitType == null) {
                     continue;
                 }
 
-                unit = unitType.create(Team.get(unitDt.team));
-                unit.id = unitDt.id;
+                unit = unitType.create(Team.get(un.team));
+                unit.id = un.id;
                 unit.add();
             }
-            unit.move(unitDt.x, unitDt.y);
-            unit.rotation = unitDt.rot;
-            unit.health = unitDt.health;
+            unit.move(un.x, un.y);
+            unit.rotation = un.rot;
+            unit.health = un.health;
         }
     }
 
     @Override
-    public void interpolate(Jval prevSnapshot, Jval curSnapshot) {
+    public void interpolate(ReplayFmtMap prevSnapshot, ReplayFmtMap curSnapshot) {
 
-        var prevUnits = prevSnapshot.get(ReplayFrame.UNITS);
-        var currUnits = curSnapshot.get(ReplayFrame.UNITS);
+        var prevUnits = prevSnapshot.get(Types.UNIT);
+        var currUnits = curSnapshot.get(Types.UNIT);
         if (prevUnits == null || currUnits == null) return;
 
         var prevIds = new IntSet();
-        for (var pu : prevUnits.asArray()) {
-            int id = pu.asArray().get(ReplayFrame.Unit.ID).asInt();
-            prevIds.add(id);
+        for (var pu : prevUnits) {
+            prevIds.add(((Unit) pu).id);
         }
 
 
-        for (var cu : currUnits.asArray()) {
-            var ut = ReplayFrame.Unit.fromJson(cu);
-
-            assert ut != null;
+        for (var cu : currUnits) {
+            var ut = (Unit) cu;
 
             prevIds.remove(ut.id);
 //            var unit = Groups.unit.find(u -> u.id == ut.id);
@@ -74,12 +66,12 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
 
             unit.controller(new UnitController() {
                 @Override
-                public void unit(Unit unit) {
+                public void unit(mindustry.gen.Unit unit) {
 
                 }
 
                 @Override
-                public Unit unit() {
+                public mindustry.gen.Unit unit() {
                     return null;
                 }
             });
@@ -87,17 +79,16 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
             var pu = findUnitById(prevUnits, ut.id);
             if (pu == null) continue;
 
-            var arr = pu.asArray();
 
-            var prevX = safeFloat(arr.get(ReplayFrame.Unit.X));
-            assert prevX != null;
-            var prevY = safeFloat(arr.get(ReplayFrame.Unit.Y));
-            assert prevY != null;
-            var prevRot = safeFloat(arr.get(ReplayFrame.Unit.ROT));
-            assert prevRot != null;
+//            var prevX = safeFloat(arr.get(ReplayFrame.Unit.X));
+//            assert prevX != null;
+//            var prevY = safeFloat(arr.get(ReplayFrame.Unit.Y));
+//            assert prevY != null;
+//            var prevRot = safeFloat(arr.get(ReplayFrame.Unit.ROT));
+//            assert prevRot != null;
 
-            unit.set(Mathf.lerp(prevX, ut.x, 1f), Mathf.lerp(prevY, ut.y, 1f));
-            unit.rotation = lerpAngle(prevRot, ut.rot);
+            unit.set(Mathf.lerp(pu.x, ut.x, 1f), Mathf.lerp(pu.y, ut.y, 1f));
+            unit.rotation = lerpAngle(pu.rot, ut.rot);
 
             if (ut.target != null) {
                 unit.aim(ut.target.x, ut.target.y);
@@ -134,10 +125,9 @@ public class ReplayUnit implements ReplayPlayer.SnapshotApplier {
         return from + delta;
     }
 
-    private Jval findUnitById(Jval unitsArray, int id) {
-        if (!unitsArray.isArray()) return null;
-        for (var u : unitsArray.asArray()) {
-            if (u.asArray().get(ReplayFrame.Unit.ID).asInt() == id) return u;
+    private @Nullable Unit findUnitById(Seq<Object> unitsArray, int id) {
+        for (var u : unitsArray) {
+            if (((Unit) u).id == id) return (Unit) u;
         }
         return null;
     }

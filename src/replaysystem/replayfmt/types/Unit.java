@@ -29,6 +29,14 @@ public class Unit implements WriteToStream {
         this.target = target;
     }
 
+    public static Unit fromUnit(mindustry.gen.Unit unit) {
+        Coords2D target = null;
+        if (unit.isShooting) {
+            target = new Coords2D(unit.aimX, unit.aimY);
+        }
+        return new Unit(unit.id, unit.type.id, unit.x, unit.y, unit.rotation, unit.health, unit.team.id, target);
+    }
+
     public static Unit fromInpStream(RandomAccessFile stream) throws IOException {
         var unitId = stream.readInt();
         var unitType = stream.readShort();
@@ -38,9 +46,15 @@ public class Unit implements WriteToStream {
         var unitHealth = stream.readFloat();
         var unitTeam = stream.readUnsignedByte();
 
-        var targetX = stream.readFloat();
-        var targetY = stream.readFloat();
-        var target = (targetX == 0 && targetY == 0) ? null : new Coords2D(targetX, targetY);
+        var isHasTarget = stream.readUnsignedByte();
+
+        Coords2D target = null;
+
+        if (isHasTarget != 0) {
+            var targetX = stream.readFloat();
+            var targetY = stream.readFloat();
+            target = new Coords2D(targetX, targetY);
+        }
 
         return new Unit(unitId, unitType, unitX, unitY, unitRot, unitHealth, unitTeam, target);
     }
@@ -55,11 +69,20 @@ public class Unit implements WriteToStream {
         stream.writeFloat(this.health);
         stream.writeByte((byte) this.team);
         if (this.target != null) {
+            stream.writeByte(1);
             stream.writeFloat(this.target.x);
             stream.writeFloat(this.target.y);
         } else {
-            stream.writeFloat(0f);
-            stream.writeFloat(0f);
+            stream.writeByte(0);
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "Unit: [id=%d, type=%d, x=%f, y=%f, rotation=%f, health=%f, team=%d, target=%s]", this.id, this.type, this.x, this.y,
+                this.rot, this.health,
+                this.team, this.target != null ? this.target.toString() : "null"
+        );
     }
 }

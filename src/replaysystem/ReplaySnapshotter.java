@@ -1,47 +1,63 @@
 package replaysystem;
 
+import arc.struct.Seq;
+import arc.util.Log;
 import arc.util.Nullable;
-import arc.util.serialization.Jval;
 import mindustry.Vars;
 import mindustry.gen.Groups;
+import replaysystem.replayfmt.types.Block;
+import replaysystem.replayfmt.types.Tick;
+import replaysystem.replayfmt.types.Unit;
 
-// TODO записывает одно и тоже два раза.
 
-// TODO событий нет, tick тоже не писать. для каждого файла счетать при какой частоте тиков он был снят
 public class ReplaySnapshotter {
-    private Jval snapshot = Jval.newObject();
-    private Jval blocks = Jval.newArray();
+    private final Seq<Object> content = new Seq<>();
 
-    public @Nullable Jval createSnapshot() {
+    private int firstTick = -1;
+    private int endTick = -1;
+    private int lastTick = -1;
+
+
+    public @Nullable Seq<Object> createSnapshot() {
         var currentTick = (int) Vars.state.tick;
-        if (currentTick % ReplayConfig.SNAPSHOT_INTERVAL != 0) return null;
+//        if (currentTick % ReplayConfig.SNAPSHOT_INTERVAL != 0 || currentTick == this.lastTick) return null;
+        if (currentTick == this.lastTick) return null;
 
-        snapshot.put(ReplayFrame.TICK, currentTick);
+        this.lastTick = currentTick;
+
         recordUnits();
 
-        if (!blocks.asArray().isEmpty()) {
-            snapshot.put(ReplayFrame.BLOCKS, blocks);
-            blocks = Jval.newArray();
+        if (this.content.isEmpty()) {
+            return null;
+        } else {
+            var c = this.content.copy(); // TODO избавится от копирования по возможности.
+            c.add(new Tick(currentTick));
+            this.tickUpdate(currentTick);
+            this.content.clear();
+            return c;
         }
-        var result = snapshot;
-        snapshot = Jval.newObject();
+    }
 
-        return result;
+    private void tickUpdate(int tick) {
+        if (this.firstTick == -1) {
+            this.firstTick = tick;
+        } else {
+            this.endTick = tick;
+        }
+    }
+
+    public int duration() {
+        return this.endTick - this.firstTick;
     }
 
     private void recordUnits() {
-        var unitsArray = Jval.newArray();
         Groups.unit.each(unit -> {
             if (unit == null || !unit.isAdded()) return;
-            unitsArray.add(ReplayFrame.Unit.fromUnit(unit).toJson());
+            this.content.add(Unit.fromUnit(unit));
         });
-
-        if (!unitsArray.asArray().isEmpty()) {
-            snapshot.put(ReplayFrame.UNITS, unitsArray);
-        }
     }
 
-    public void recordBlock(ReplayFrame.Block block) {
-        blocks.asArray().add(block.toJson());
+    public void recordBlock(Block block) {
+        this.content.add(block);
     }
 }

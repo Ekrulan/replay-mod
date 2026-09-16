@@ -8,13 +8,15 @@ import replaysystem.replayfmt.types.Unit;
 import java.io.*;
 
 public class ReplayFmtWriter implements AutoCloseable {
+    private final FileOutputStream replayRawStream;
     private final DataOutputStream replayFileStream;
     private final DataOutputStream indexFileStream;
 
     public ReplayFmtWriter(Fi outputFile) {
         try {
-            this.replayFileStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile.file())));
-            this.indexFileStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile.sibling(".index").file())));
+            this.replayRawStream = new FileOutputStream(outputFile.file());
+            this.replayFileStream = new DataOutputStream(new BufferedOutputStream(replayRawStream));
+            this.indexFileStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(Util.dotIndex(outputFile).file())));
         } catch (Exception e) {
             throw new RuntimeException("Failed to open replay file for writing", e);
         }
@@ -23,18 +25,24 @@ public class ReplayFmtWriter implements AutoCloseable {
     public void write(Object obj) {
         try {
             if (obj instanceof Tick tick) {
-                this.replayFileStream.writeByte(1); // TICK
+                this.replayFileStream.flush();
 
-                // TODO если файл будет слишокм большим, может произойти переполнение int.
-                var seek = this.replayFileStream.size();
-                this.indexFileStream.writeInt(seek);
 
+                this.replayFileStream.writeByte(Types.TICK);
                 tick.writeToStream(this.replayFileStream);
+
+                long seek = this.replayRawStream.getChannel().position();
+
+//                Log.info("ReplayFmtWriter: tick seek: " + seek);
+
+                this.indexFileStream.writeInt((int) seek);
+                this.indexFileStream.flush();
+
             } else if (obj instanceof Unit unit) {
-                this.replayFileStream.writeByte(2); // UNITS
+                this.replayFileStream.writeByte(Types.UNIT);
                 unit.writeToStream(this.replayFileStream);
             } else if (obj instanceof Block block) {
-                this.replayFileStream.writeByte(3); // BLOCKS
+                this.replayFileStream.writeByte(Types.BLOCK);
                 block.writeToStream(this.replayFileStream);
             } else {
                 throw new IllegalArgumentException("Unknown object type for replay: " + obj.getClass().getName());
@@ -46,11 +54,9 @@ public class ReplayFmtWriter implements AutoCloseable {
 
     @Override
     public void close() {
-        try {
-            if (replayFileStream != null) {
-                replayFileStream.flush();
-                replayFileStream.close();
-            }
+        try (replayFileStream; indexFileStream) {
+            if (replayFileStream != null) replayFileStream.flush();
+            if (indexFileStream != null) indexFileStream.flush();
         } catch (IOException ignored) {
         }
     }

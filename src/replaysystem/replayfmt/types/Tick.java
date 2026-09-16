@@ -22,4 +22,9 @@ public class Tick implements WriteToStream {
     public void writeToStream(DataOutputStream stream) throws IOException {
         stream.writeInt(this.tick);
     }
+
+    @Override
+    public String toString() {
+        return String.format("Tick: [tick=%d]", this.tick);
+    }
 }

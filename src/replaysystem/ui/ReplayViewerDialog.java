@@ -14,10 +14,13 @@ import replaysystem.replayplayer.ReplayPlayer;
 
 public class ReplayViewerDialog extends BaseDialog {
 
-    public ReplayViewerDialog() {
+    private final ReplayPlayer rp;
+
+    public ReplayViewerDialog(ReplayPlayer rp) {
         super("@replay-mod.view-replays");
         this.rebuild();
         this.addCloseButton();
+        this.rp = rp;
     }
 
     private void rebuild() {
@@ -53,7 +56,7 @@ public class ReplayViewerDialog extends BaseDialog {
         ReplayConfig.isLoadingReplay = true;
         ReplayConfig.isReplaying = false;
 
-        var root = new GameWindow();
+//        var root = new GameWindow();
 
 
         arc.Core.app.post(() -> {
@@ -72,13 +75,14 @@ public class ReplayViewerDialog extends BaseDialog {
 
                 ReplayConfig.isLoadingReplay = false;
                 ReplayConfig.isReplaying = true;
-                ReplayPlayer.instance.start(replay);
-                var replayUi = ReplayControls.instance.buildHud(ReplayPlayer.instance);
+                rp.start(replay);
 
-                root.add(replayUi).expandY().bottom().padBottom(20f);
-                ReplayPlayer.instance.listeners.add(ReplayControls.instance::updateProgressBase);
+//                var replayUi = ReplayControls.instance.buildHud(rp);
 
-                Vars.ui.hudGroup.addChild(root);
+//                root.add(replayUi).expandY().bottom().padBottom(20f);
+//                rp.listeners.add(ReplayControls.instance::updateProgressBase);
+
+//                Vars.ui.hudGroup.addChild(root);
 
 
                 Vars.ui.loadfrag.hide();

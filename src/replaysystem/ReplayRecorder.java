@@ -1,44 +1,43 @@
 package replaysystem;
 
-import arc.struct.Seq;
 import arc.util.Log;
-import arc.util.serialization.Jval;
 import mindustry.io.SaveIO;
 import replaysystem.data.InfoFile;
 import replaysystem.data.ReplayFile;
+import replaysystem.replayfmt.types.Block;
 
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ReplayRecorder {
-    public static final ReplayRecorder instance = new ReplayRecorder();
 
     private final AtomicBoolean recording = new AtomicBoolean(false);
 
-    private final Seq<Jval> events = new Seq<>();
-    private final ReplaySnapshotter snapshotter = new ReplaySnapshotter();
+    //    private final Seq<Jval> events = new Seq<>();
+    private static final ReplaySnapshotter snapshotter = new ReplaySnapshotter();
 
-    private ReplayFile.Writer work_dir;
+
+    private ReplayFile.Writer workDir;
 
     public void start() {
         if (recording.get() || ReplayConfig.isReplaying) return;
 
-        work_dir = new ReplayFile().new Writer();
+        workDir = new ReplayFile().new Writer();
 
-        work_dir.saveMap();
+        workDir.saveMap();
 
-        events.clear();
+//        events.clear();
         recording.set(true);
         Log.info("ReplayRecorder: start");
     }
 
     public void stop() {
-        if (!recording.get() || events.isEmpty()) return;
+        if (!recording.get()) return;
         recording.set(false);
 
-        work_dir.writeEvent(events.toString());
+//        workDir.writeEvent(events.toString());
 
-        var meta = SaveIO.getMeta(work_dir.getFirstMap());
+        var meta = SaveIO.getMeta(workDir.getFirstMap());
 
         String mapName = null;
         int width = -1;
@@ -69,16 +68,14 @@ public class ReplayRecorder {
             }
         }
 
+        var duration = snapshotter.duration();
 
-        // TODO  это время одного файла, их может быть несколько
-        var duration = events.get(events.size - 1).get(ReplayFrame.TICK).asInt() - events.get(0).get(ReplayFrame.TICK).asInt();
+        workDir.writeInfo(new InfoFile(mapName, duration, Instant.now().getEpochSecond(), String.format("%dx%d", width, height)));
 
-        work_dir.writeInfo(new InfoFile(mapName, duration, Instant.now().getEpochSecond(), String.format("%dx%d", width, height)));
-
-        Log.info("ReplayRecorder: saved (" + events.size + " events)");
-        events.clear();
-        work_dir.zip();
-        work_dir = null;
+//        Log.info("ReplayRecorder: saved (" + events.size + " events)");
+//        events.clear();
+        workDir.zip();
+        workDir = null;
     }
 
     public boolean isRecording() {
@@ -87,13 +84,22 @@ public class ReplayRecorder {
 
     public void onUpdate() {
 
+        if (!this.isRecording()) {
+            return;
+        }
+
         var maybeSnapshot = snapshotter.createSnapshot();
         if (maybeSnapshot != null) {
-            events.add(maybeSnapshot);
+//            Log.info("snapshot: " + maybeSnapshot);
+            // We iterate in reverse order, because tick must come first, but in the snapshot it’s added last.
+            for (var i = maybeSnapshot.size - 1; i >= 0; i--) {
+                workDir.write(maybeSnapshot.get(i));
+            }
         }
     }
 
-    public void recordBlock(ReplayFrame.Block block) {
+    public void recordBlock(Block block) {
+//        Log.info("recordBlock: " + block);
         snapshotter.recordBlock(block);
     }
 }
