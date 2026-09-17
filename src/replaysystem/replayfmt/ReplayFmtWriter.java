@@ -1,6 +1,8 @@
 package replaysystem.replayfmt;
 
 import arc.files.Fi;
+import replaysystem.replayfmt.helpers.Types;
+import replaysystem.replayfmt.helpers.Util;
 import replaysystem.replayfmt.types.Block;
 import replaysystem.replayfmt.types.Tick;
 import replaysystem.replayfmt.types.Unit;

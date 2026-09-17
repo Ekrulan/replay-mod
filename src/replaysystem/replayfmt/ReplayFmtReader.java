@@ -1,12 +1,14 @@
 package replaysystem.replayfmt;
 
 import arc.files.Fi;
-import arc.util.Log;
 import arc.util.Nullable;
+import replaysystem.replayfmt.helpers.Types;
+import replaysystem.replayfmt.helpers.Util;
 import replaysystem.replayfmt.types.Block;
 import replaysystem.replayfmt.types.Tick;
 import replaysystem.replayfmt.types.Unit;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Iterator;
@@ -19,8 +21,6 @@ public class ReplayFmtReader implements Iterable<Object>, AutoCloseable {
 
     private final ReplayFmtIterator globalIterator = new ReplayFmtIterator();
 
-    private Object nextElement = null;
-
     public ReplayFmtReader(Fi inputFile) {
         try {
             this.replayFile = new RandomAccessFile(inputFile.file(), "r");
@@ -31,26 +31,33 @@ public class ReplayFmtReader implements Iterable<Object>, AutoCloseable {
     }
 
     public class ReplayFmtIterator implements Iterator<Object> {
+
+        private Object nextElement = null;
+
         @Override
         public boolean hasNext() {
-            if (nextElement == null) {
-                nextElement = readNextElement();
+            if (this.nextElement == null) {
+                this.nextElement = readNextElement();
             }
-            return nextElement != null;
+            return this.nextElement != null;
         }
 
         public Object peek() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return nextElement;
+            return this.nextElement;
         }
 
         @Override
         public Object next() {
             var element = this.peek();
-            nextElement = null;
+            this.resetNextElement();
             return element;
+        }
+
+        public void resetNextElement() {
+            this.nextElement = null;
         }
     }
 
@@ -92,19 +99,18 @@ public class ReplayFmtReader implements Iterable<Object>, AutoCloseable {
         return map;
     }
 
-    private @Nullable Object readNextElement() throws IllegalArgumentException {
+    private @Nullable Object readNextElement() {
         try {
-            int type = replayFile.read();
-            if (type == -1) {
-                return null;
-            }
+            int type = this.replayFile.readUnsignedByte();
 
             return switch (type) {
-                case Types.TICK -> Tick.fromInpStream(replayFile);
-                case Types.UNIT -> Unit.fromInpStream(replayFile);
-                case Types.BLOCK -> Block.fromInpStream(replayFile);
+                case Types.TICK -> Tick.fromInpStream(this.replayFile);
+                case Types.UNIT -> Unit.fromInpStream(this.replayFile);
+                case Types.BLOCK -> Block.fromInpStream(this.replayFile);
                 default -> throw new IllegalStateException("Unknown data type: " + type);
             };
+        } catch (EOFException e) {
+            return null;
         } catch (IOException e) {
             throw new RuntimeException("Error reading replay stream", e);
         }
@@ -114,16 +120,16 @@ public class ReplayFmtReader implements Iterable<Object>, AutoCloseable {
         try {
             var position = (long) index * Integer.BYTES;
 
-            if (position < 0 || position > indexFile.length()) {
+            if (position < 0 || position > this.indexFile.length()) {
                 throw new IllegalArgumentException("Index out of bounds: " + index);
             }
 
-            indexFile.seek(position);
-            var tickPosition = indexFile.readInt();
+            this.indexFile.seek(position);
+            var tickPosition = this.indexFile.readInt();
 
-            replayFile.seek(tickPosition);
+            this.replayFile.seek(tickPosition);
 
-            nextElement = null;
+            this.globalIterator.resetNextElement();
         } catch (IOException e) {
             throw new RuntimeException("Error seeking to tick index: " + index, e);
         }
@@ -133,16 +139,16 @@ public class ReplayFmtReader implements Iterable<Object>, AutoCloseable {
     public void close() {
         IOException exception = null;
 
-        if (replayFile != null) {
+        if (this.replayFile != null) {
             try {
-                replayFile.close();
+                this.replayFile.close();
             } catch (IOException e) {
                 exception = e;
             }
         }
-        if (indexFile != null) {
+        if (this.indexFile != null) {
             try {
-                indexFile.close();
+                this.indexFile.close();
             } catch (IOException e) {
                 if (exception == null) exception = e;
             }

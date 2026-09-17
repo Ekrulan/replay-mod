@@ -1,4 +1,4 @@
-package replaysystem.replayfmt;
+package replaysystem.replayfmt.helpers;
 
 import arc.files.Fi;
 

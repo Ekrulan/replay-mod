@@ -1,8 +1,8 @@
 package replaysystem.replayfmt.types;
 
 import arc.util.Nullable;
-import replaysystem.helpers.Coords2D;
-import replaysystem.replayfmt.WriteToStream;
+import replaysystem.replayfmt.helpers.Coords2D;
+import replaysystem.replayfmt.helpers.WriteToStream;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -51,9 +51,7 @@ public class Unit implements WriteToStream {
         Coords2D target = null;
 
         if (isHasTarget != 0) {
-            var targetX = stream.readFloat();
-            var targetY = stream.readFloat();
-            target = new Coords2D(targetX, targetY);
+            target = Coords2D.fromInpStream(stream);
         }
 
         return new Unit(unitId, unitType, unitX, unitY, unitRot, unitHealth, unitTeam, target);
@@ -70,8 +68,7 @@ public class Unit implements WriteToStream {
         stream.writeByte((byte) this.team);
         if (this.target != null) {
             stream.writeByte(1);
-            stream.writeFloat(this.target.x);
-            stream.writeFloat(this.target.y);
+            this.target.writeToStream(stream);
         } else {
             stream.writeByte(0);
         }

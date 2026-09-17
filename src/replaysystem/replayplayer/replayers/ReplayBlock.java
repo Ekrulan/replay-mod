@@ -5,7 +5,7 @@ import mindustry.Vars;
 import mindustry.content.Blocks;
 import mindustry.game.Team;
 import replaysystem.replayfmt.ReplayFmtMap;
-import replaysystem.replayfmt.Types;
+import replaysystem.replayfmt.helpers.Types;
 import replaysystem.replayfmt.types.Block;
 import replaysystem.replayplayer.ReplayPlayer;
 

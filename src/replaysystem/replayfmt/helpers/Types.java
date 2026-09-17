@@ -1,4 +1,4 @@
-package replaysystem.replayfmt;
+package replaysystem.replayfmt.helpers;
 
 public class Types {
     public static final int TICK = 1;

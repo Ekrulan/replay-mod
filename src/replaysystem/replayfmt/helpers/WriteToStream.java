@@ -1,4 +1,4 @@
-package replaysystem.replayfmt;
+package replaysystem.replayfmt.helpers;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

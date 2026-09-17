@@ -1,6 +1,6 @@
 package replaysystem.replayfmt.types;
 
-import replaysystem.replayfmt.WriteToStream;
+import replaysystem.replayfmt.helpers.WriteToStream;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

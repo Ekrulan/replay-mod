@@ -12,7 +12,6 @@ import replaysystem.replayfmt.ReplayFmtMap;
 import replaysystem.replayfmt.ReplayFmtReader;
 import replaysystem.replayfmt.ReplayFmtWriter;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -33,28 +32,28 @@ public class ReplayFile {
         REPLAYS_DIR.mkdirs();
     }
 
-    private static final String EVENTS_NAME_DIR = "events";
-    private static final String EVENT_NAME = "event";
+    private static final String DATA_DIR = "data";
+    private static final String CONTENT_NAME = "content";
     private static final String MAPS_NAME_DIR = "maps";
     private static final String INFO_NAME_FILE = "info";
 
     private final Fi zipFile;
     private final Fi workDir;
-    private final Fi eventsDir;
+    private final Fi dataDir;
     private final Fi mapsDir;
 
     private final AtomicInteger counter = new AtomicInteger();
 
     public ReplayFile() {
         this(String.valueOf(System.currentTimeMillis()));
-        this.eventsDir.mkdirs();
+        this.dataDir.mkdirs();
         this.mapsDir.mkdirs();
     }
 
     public ReplayFile(String name) {
         this.zipFile = REPLAYS_DIR.child(name);
         this.workDir = UNPACKED.child(name);
-        this.eventsDir = this.workDir.child(EVENTS_NAME_DIR);
+        this.dataDir = this.workDir.child(DATA_DIR);
         this.mapsDir = this.workDir.child(MAPS_NAME_DIR);
     }
 
@@ -124,7 +123,7 @@ public class ReplayFile {
         private final ReplayFmtWriter rfw;
 
         public Writer() {
-            this.rfw = new ReplayFmtWriter(eventsDir.child(EVENT_NAME));
+            this.rfw = new ReplayFmtWriter(dataDir.child(CONTENT_NAME));
         }
 
         private String nextName() {
@@ -152,19 +151,16 @@ public class ReplayFile {
             this.rfw.write(obj);
         }
 
-//        public void writeEvent(String ev) {
-//            eventsDir.child(nextName()).writeString(ev);
-//        }
 
         public void zip() {
             ReplayFile.this.zip();
             if (this.rfw != null) {
-//                this.rfw.close();
+                this.rfw.close();
             }
         }
     }
 
-    public class Reader implements Closeable {
+    public class Reader implements AutoCloseable {
         private final Fi[] mapFiles;
         private int mapIdx = 0;
 
@@ -175,7 +171,7 @@ public class ReplayFile {
                 unzip(zipFile, workDir);
             }
 
-            this.rfr = new ReplayFmtReader(eventsDir.child(EVENT_NAME));
+            this.rfr = new ReplayFmtReader(dataDir.child(CONTENT_NAME));
             this.mapFiles = sorted(mapsDir.list());
         }
 
@@ -200,7 +196,7 @@ public class ReplayFile {
         }
 
         @Override
-        public void close() { // TODO закрывать
+        public void close() {
             if (this.rfr != null) {
                 this.rfr.close();
             }

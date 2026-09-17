@@ -2,12 +2,12 @@ package replaysystem;
 
 import arc.Core;
 import arc.Events;
-import arc.util.Log;
 import mindustry.game.EventType.*;
 import mindustry.gen.Icon;
 import mindustry.gen.PlayerSpawnCallPacket;
 import mindustry.mod.Mod;
 import mindustry.Vars;
+import replaysystem.recordreplay.ReplayRecorder;
 import replaysystem.replayfmt.types.Block;
 import replaysystem.replayplayer.ReplayPlayer;
 import replaysystem.ui.ReplayViewerDialog;
@@ -16,7 +16,6 @@ import replaysystem.ui.ReplayViewerDialog;
 public class Main extends Mod {
 
     public Main() {
-        Log.info("ReplayMod loaded");
 
         var replayRecorder = new ReplayRecorder(); // TODO сдлеать умную загрузку. так как одновременно нужен тольк один из них.
         var replayPlayer = ReplayPlayer.withDefaultHandlers();

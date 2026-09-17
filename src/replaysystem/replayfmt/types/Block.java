@@ -3,7 +3,7 @@ package replaysystem.replayfmt.types;
 import arc.util.Log;
 import arc.util.Nullable;
 import mindustry.game.EventType;
-import replaysystem.replayfmt.WriteToStream;
+import replaysystem.replayfmt.helpers.WriteToStream;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -31,7 +31,6 @@ public class Block implements WriteToStream {
         if (isHasBuild != 0) {
             b = Build.fromInpStream(stream);
         }
-
         return new Block(blockX, blockY, b);
     }
 
@@ -53,7 +52,6 @@ public class Block implements WriteToStream {
 
     public static Block fromEvent(EventType.BlockBuildEndEvent e) {
         var build = e.tile.build;
-        Log.info(build);
 
         Build content = null;
 

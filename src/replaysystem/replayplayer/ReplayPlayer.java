@@ -25,11 +25,10 @@ public class ReplayPlayer {
         }
     }
 
-    public final Seq<Consumer<ReplayPlayer>> listeners = new Seq<>();
+//    public final Seq<Consumer<ReplayPlayer>> listeners = new Seq<>();
 
     private final Seq<SnapshotApplier> handlers;
 
-//    public static final ReplayPlayer instance = new ReplayPlayer(Seq.with(new ReplayUnit(), new ReplayBlock()));
 
     public static ReplayPlayer withDefaultHandlers() {
         return new ReplayPlayer(Seq.with(new ReplayUnit(), new ReplayBlock()));
@@ -96,7 +95,7 @@ public class ReplayPlayer {
         } catch (Exception e) {
             Log.err("ReplayPlayer: error reading events", e);
         }
-        currentReplay.close(); // TODO
+        currentReplay.close();
         return false;
     }
 

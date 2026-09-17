@@ -9,7 +9,7 @@ import mindustry.entities.units.UnitController;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
 import replaysystem.replayfmt.ReplayFmtMap;
-import replaysystem.replayfmt.Types;
+import replaysystem.replayfmt.helpers.Types;
 import replaysystem.replayfmt.types.Unit;
 import replaysystem.replayplayer.ReplayPlayer;
 
